@@ -1,0 +1,62 @@
+ADV: Problèmes et questions relevant de l'Administration des Ventes (ADV), généralement
+  d'ordre administratif. Cela inclut la souscription, la gestion ou la résiliation
+  de contrat, les demandes de duplicata ou de justificatif, ainsi que la mise à jour
+  des données contractuelles.
+ApCv: Problèmes ou questions concernant l'utilisation de l'application Carte Vitale
+  'ApCv' et/ou des lecteurs spécifiques compatibles (Liteo 2D, lecteur de QR code),
+  que ce soit pour la lecture digitale de la carte vitale ou l'intégration à Stellair.
+Appairage: Demandes concernant l'association (appairage) d'un lecteur de carte Vitale
+  à un utilisateur ou à un poste de travail Stellair, incluant les démarches d'installation,
+  de configuration et de résolution des problèmes de reconnaissance du lecteur.
+Carte CPS: Questions et incidents portant sur l'ajout, le renouvellement ou la gestion
+  d'une carte CPS (Carte de Professionnel de Santé). Comprend également le traitement
+  des messages d'erreur lors de l'utilisation de la carte dans le contexte de la facturation
+  ou de l'identification professionnelle.
+Facturation: Questions et problèmes relatifs à la création, la gestion et l'édition
+  des factures/feuilles de soins électroniques. Sont incluses les interrogations sur
+  les étapes de facturation, le remplissage des champs, les choix d'actes, la validation
+  ou encore les corrections d'erreurs lors de la génération d'une FSE (feuille de
+  soins électronique).
+Fonctionnalités: Ensemble des questions et problèmes liés au fonctionnement général
+  de l'interface ou des différentes fonctionnalités proposées par l'application Stellair.
+  Cela englobe notamment l'utilisation des menus, la navigation dans les modules,
+  les anomalies d'affichage ou de comportement, et toutes les demandes d'explications
+  sur l'usage des outils intégrés dans l'application.
+Lecteur: 'Toutes les questions, incidents ou difficultés concernant l''utilisation,
+  la connexion ou le paramétrage des lecteurs de carte Vitale utilisés avec Stellair
+  (modèles : Prium 4/P4, Move5000, Neo, IWL350). Cela inclut les problèmes matériels
+  et les problemes de connexion (terminal indisponible).'
+PC/SC: Questions spécifiques au protocole PC/SC, notamment sur la connexion des lecteurs
+  (NEO, PRIUM 4, MOVE) via USB pour permettre l'accès aux services en ligne (type
+  Ameli Pro), l'utilisation de la carte CPS ou la lecture de la carte Vitale depuis
+  des logiciels métiers tiers autres que Stellair. Englobe également les incidents
+  liés à l'installation des pilotes ou la reconnaissance du lecteur par le poste.
+Recettes: Demandes concernant la gestion et le suivi des paiements reçus au cabinet,
+  que ce soit par chèque, carte bancaire, espèces ou virement. Couvre aussi la gestion
+  du remboursement du tiers payant, le pointage des règlements et la vérification
+  de la bonne intégration des recettes dans les rapports comptables proposés par Stellair.
+Rejets: Demandes concernant l'apparition et le traitement des rejets de feuilles de
+  soins électroniques, que le motif soit administratif, technique ou réglementaire.
+  Cette catégorie couvre également la compréhension des codes de rejet, le processus
+  de correction et la réémission des FSE rejetées.
+Remplaçant / Collaborateur: Gestion collaborateurs et remplaçants
+SCOR: Questions relatives à la fonctionnalité SCOR (Solution de Copie et de Numérisation
+  des Ordonnances et Recettes), qui permet l'ajout et le rattachement de documents
+  (prescriptions, justificatifs) aux feuilles de soins électroniques, en particulier
+  lors de l'utilisation du mode dégradé ou pour la transmission à la caisse.
+Stellair interface / connexion: Regroupe toutes les interrogations et difficultés
+  portant sur la connexion à l'espace utilisateur Stellair, incluant les problèmes
+  d'authentification, de changement ou de perte de mot de passe, ainsi que les erreurs
+  affichées à la connexion ou lors de la navigation dans l'interface.
+TPAMC/AMO: Questions relatives à la gestion du tiers payant, que ce soit pour la partie
+  Assurance Maladie Obligatoire (AMO) ou pour l'Assurance Maladie Complémentaire (AMC
+  ou mutuelle). Comprend les problèmes d'application du tiers payant, la configuration,
+  la gestion multi-organismes, et le traitement des anomalies de remboursement.
+TPE: Ensemble des questions et problèmes liés au fonctionnement des Terminaux de Paiement
+  Electronique (TPE), notamment les modèles MOVE ou IWL, dans le cadre de l'encaissement
+  des paiements par carte bancaire. Cela inclut les incidents de communication, d'intégration
+  ou de traitement des transactions.
+Télésservices: 'Questions et problèmes relatifs à l''utilisation des télésservices
+  proposés via Stellair (par exemple : ADRi, INSi, ALDi), tels que la recherche d''assuré,
+  la mise à jour des droits, ou les messages d''erreur indiquant l''indisponibilité
+  d''un service ou l''échec à retrouver un patient.'

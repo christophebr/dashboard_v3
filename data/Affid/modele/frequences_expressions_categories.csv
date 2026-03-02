@@ -1,0 +1,1060 @@
+﻿catégorie,expression,type,fréquence
+Lecteur,lecteur,unigramme,111
+Lecteur,carte,unigramme,45
+Lecteur,plus,unigramme,42
+Lecteur,stellair,unigramme,33
+Lecteur,connecté,unigramme,22
+Lecteur,message,unigramme,22
+Lecteur,connecter,unigramme,22
+Lecteur,connexion,unigramme,21
+Lecteur,fonctionne,unigramme,20
+Lecteur,cartes,unigramme,16
+Lecteur,depuis,unigramme,16
+Lecteur,jour,unigramme,15
+Lecteur,faire,unigramme,15
+Lecteur,alors,unigramme,14
+Lecteur,vitales,unigramme,14
+Lecteur,vitale,unigramme,14
+Lecteur,bonjour,unigramme,14
+Lecteur,problème,unigramme,14
+Lecteur,cps,unigramme,14
+Lecteur,merci,unigramme,13
+Lecteur,cartes vitales,bigramme,14
+Lecteur,carte vitale,bigramme,13
+Lecteur,connecter lecteur,bigramme,9
+Lecteur,mise jour,bigramme,9
+Lecteur,terminal indisponible,bigramme,9
+Lecteur,lecteur déconnecté,bigramme,8
+Lecteur,fonctionne plus,bigramme,7
+Lecteur,message erreur,bigramme,7
+Lecteur,lecteur connecté,bigramme,7
+Lecteur,lecteur prium,bigramme,7
+Lecteur,bonjour lecteur,bigramme,6
+Lecteur,lit plus,bigramme,5
+Lecteur,lecture carte,bigramme,5
+Lecteur,lecteur neo,bigramme,5
+Lecteur,pendant exécution,bigramme,5
+Lecteur,exécution ordre,bigramme,5
+Lecteur,carte cps,bigramme,5
+Lecteur,carte muette,bigramme,5
+Lecteur,connecte plus,bigramme,5
+Lecteur,connexion cours,bigramme,5
+Lecteur,pendant exécution ordre,trigramme,5
+Lecteur,lit plus cartes,trigramme,4
+Lecteur,plus cartes vitales,trigramme,4
+Lecteur,lecteur déconnecté pendant,trigramme,4
+Lecteur,déconnecté pendant exécution,trigramme,4
+Lecteur,carte invalide carte,trigramme,3
+Lecteur,invalide carte muette,trigramme,3
+Lecteur,plus lire cartes,trigramme,3
+Lecteur,lire cartes vitales,trigramme,3
+Lecteur,dit lecteur connecté,trigramme,3
+Lecteur,cartes vitales depuis,trigramme,2
+Lecteur,insertion carte vitale,trigramme,2
+Lecteur,arrive plus lire,trigramme,2
+Lecteur,fonctionne plus depuis,trigramme,2
+Lecteur,message erreur lecteur,trigramme,2
+Lecteur,erreur lecteur déconnecté,trigramme,2
+Lecteur,stellair signale lecteur,trigramme,2
+Lecteur,signale lecteur connecté,trigramme,2
+Lecteur,impossible connecter lecteur,trigramme,2
+Lecteur,connecter pro santé,trigramme,2
+Fonctionnalités,stellair,unigramme,36
+Fonctionnalités,comment,unigramme,30
+Fonctionnalités,factures,unigramme,28
+Fonctionnalités,faire,unigramme,27
+Fonctionnalités,affid,unigramme,22
+Fonctionnalités,bonjour,unigramme,21
+Fonctionnalités,omnidoc,unigramme,21
+Fonctionnalités,fse,unigramme,18
+Fonctionnalités,facture,unigramme,16
+Fonctionnalités,merci,unigramme,15
+Fonctionnalités,facturation,unigramme,14
+Fonctionnalités,retour,unigramme,14
+Fonctionnalités,depuis,unigramme,13
+Fonctionnalités,patient,unigramme,12
+Fonctionnalités,si,unigramme,11
+Fonctionnalités,plus,unigramme,11
+Fonctionnalités,mise,unigramme,11
+Fonctionnalités,jour,unigramme,11
+Fonctionnalités,soins,unigramme,10
+Fonctionnalités,compte,unigramme,10
+Fonctionnalités,affid standard,bigramme,7
+Fonctionnalités,vers affid,bigramme,6
+Fonctionnalités,retour noemie,bigramme,5
+Fonctionnalités,mise jour,bigramme,4
+Fonctionnalités,interface omnidoc,bigramme,4
+Fonctionnalités,carte vitale,bigramme,4
+Fonctionnalités,comment faire,bigramme,4
+Fonctionnalités,comment puis,bigramme,4
+Fonctionnalités,omnidoc stellair,bigramme,4
+Fonctionnalités,feuille soins,bigramme,4
+Fonctionnalités,bonjour possible,bigramme,4
+Fonctionnalités,stellair vers,bigramme,3
+Fonctionnalités,devis date,bigramme,3
+Fonctionnalités,dois faire,bigramme,3
+Fonctionnalités,stellair affid,bigramme,3
+Fonctionnalités,retours noemie,bigramme,3
+Fonctionnalités,noemie rapprocher,bigramme,3
+Fonctionnalités,faire fse,bigramme,3
+Fonctionnalités,pouvait faire,bigramme,3
+Fonctionnalités,merci aide,bigramme,3
+Fonctionnalités,stellair vers affid,trigramme,3
+Fonctionnalités,comment puis faire,trigramme,3
+Fonctionnalités,interface stellair omnidoc,trigramme,2
+Fonctionnalités,devis date soins,trigramme,2
+Fonctionnalités,ailleurs faudrait rajouter,trigramme,2
+Fonctionnalités,faudrait rajouter signature,trigramme,2
+Fonctionnalités,rajouter signature déjà,trigramme,2
+Fonctionnalités,signature déjà retour,trigramme,2
+Fonctionnalités,déjà retour mutuelle,trigramme,2
+Fonctionnalités,retour mutuelle devis,trigramme,2
+Fonctionnalités,mutuelle devis signé,trigramme,2
+Fonctionnalités,devis signé praticien,trigramme,2
+Fonctionnalités,stellair affid standard,trigramme,2
+Fonctionnalités,retours noemie rapprocher,trigramme,2
+Fonctionnalités,carte vital patient,trigramme,2
+Fonctionnalités,retour noemie depuis,trigramme,2
+Fonctionnalités,écran accueuil place,trigramme,2
+Fonctionnalités,accueuil place plus,trigramme,2
+Fonctionnalités,place plus bonjour,trigramme,2
+Fonctionnalités,plus bonjour thomas,trigramme,2
+Remplacant / Collaborateur,compte,unigramme,42
+Remplacant / Collaborateur,remplaçant,unigramme,26
+Remplacant / Collaborateur,collaborateur,unigramme,23
+Remplacant / Collaborateur,dr,unigramme,22
+Remplacant / Collaborateur,plus,unigramme,19
+Remplacant / Collaborateur,remplaçants,unigramme,19
+Remplacant / Collaborateur,stellair,unigramme,17
+Remplacant / Collaborateur,merci,unigramme,17
+Remplacant / Collaborateur,nombre,unigramme,14
+Remplacant / Collaborateur,nouveau,unigramme,13
+Remplacant / Collaborateur,remplaçante,unigramme,13
+Remplacant / Collaborateur,lecteur,unigramme,13
+Remplacant / Collaborateur,titulaire,unigramme,12
+Remplacant / Collaborateur,comment,unigramme,12
+Remplacant / Collaborateur,mail,unigramme,12
+Remplacant / Collaborateur,bonjour,unigramme,12
+Remplacant / Collaborateur,message,unigramme,10
+Remplacant / Collaborateur,ajouter,unigramme,10
+Remplacant / Collaborateur,arrive,unigramme,10
+Remplacant / Collaborateur,erreur,unigramme,10
+Remplacant / Collaborateur,compte collaborateur,bigramme,7
+Remplacant / Collaborateur,message erreur,bigramme,6
+Remplacant / Collaborateur,augmenter nombre,bigramme,6
+Remplacant / Collaborateur,merci avance,bigramme,5
+Remplacant / Collaborateur,adresse mail,bigramme,5
+Remplacant / Collaborateur,atteint nombre,bigramme,5
+Remplacant / Collaborateur,nouveau collaborateur,bigramme,5
+Remplacant / Collaborateur,sarah gomez,bigramme,4
+Remplacant / Collaborateur,nouveau remplaçant,bigramme,4
+Remplacant / Collaborateur,nombre maximum,bigramme,4
+Remplacant / Collaborateur,lecteur prium,bigramme,4
+Remplacant / Collaborateur,nombre remplaçants,bigramme,4
+Remplacant / Collaborateur,compte dr,bigramme,4
+Remplacant / Collaborateur,dr avouac,bigramme,4
+Remplacant / Collaborateur,carte cps,bigramme,3
+Remplacant / Collaborateur,situation facturation,bigramme,3
+Remplacant / Collaborateur,arrive connecter,bigramme,3
+Remplacant / Collaborateur,mot passe,bigramme,3
+Remplacant / Collaborateur,gestion remplaçants,bigramme,3
+Remplacant / Collaborateur,compte stellair,bigramme,3
+Remplacant / Collaborateur,compte dr avouac,trigramme,4
+Remplacant / Collaborateur,dit atteint nombre,trigramme,3
+Remplacant / Collaborateur,atteint nombre maximal,trigramme,3
+Remplacant / Collaborateur,nombre maximal comptes,trigramme,3
+Remplacant / Collaborateur,augmenter nombre remplaçants,trigramme,3
+Remplacant / Collaborateur,quand fais fse,trigramme,2
+Remplacant / Collaborateur,problème merci avance,trigramme,2
+Remplacant / Collaborateur,compte remplacante adjointe,trigramme,2
+Remplacant / Collaborateur,remplacante adjointe dr,trigramme,2
+Remplacant / Collaborateur,adjointe dr sarah,trigramme,2
+Remplacant / Collaborateur,dr sarah gomez,trigramme,2
+Remplacant / Collaborateur,sarah gomez travaille,trigramme,2
+Remplacant / Collaborateur,gomez travaille tant,trigramme,2
+Remplacant / Collaborateur,travaille tant remplacantes,trigramme,2
+Remplacant / Collaborateur,tant remplacantes factures,trigramme,2
+Remplacant / Collaborateur,remplacantes factures feuilles,trigramme,2
+Remplacant / Collaborateur,factures feuilles soins,trigramme,2
+Remplacant / Collaborateur,feuilles soins réalisées,trigramme,2
+Remplacant / Collaborateur,soins réalisées affichent,trigramme,2
+Remplacant / Collaborateur,réalisées affichent correctement,trigramme,2
+Facturation,comment,unigramme,27
+Facturation,acte,unigramme,26
+Facturation,patient,unigramme,21
+Facturation,faire,unigramme,21
+Facturation,cotation,unigramme,20
+Facturation,euros,unigramme,20
+Facturation,stellair,unigramme,20
+Facturation,facturation,unigramme,19
+Facturation,alors,unigramme,18
+Facturation,bonjour,unigramme,17
+Facturation,fse,unigramme,15
+Facturation,actes,unigramme,15
+Facturation,problème,unigramme,15
+Facturation,merci,unigramme,15
+Facturation,facturer,unigramme,14
+Facturation,vitale,unigramme,14
+Facturation,quand,unigramme,13
+Facturation,50,unigramme,13
+Facturation,montant,unigramme,12
+Facturation,ivg,unigramme,12
+Facturation,carte vitale,bigramme,12
+Facturation,prise charge,bigramme,8
+Facturation,comment facturer,bigramme,6
+Facturation,lors facturation,bigramme,5
+Facturation,30 euros,bigramme,5
+Facturation,50 20,bigramme,5
+Facturation,savoir comment,bigramme,5
+Facturation,souhaite savoir,bigramme,4
+Facturation,comment faire,bigramme,4
+Facturation,sécurité sociale,bigramme,4
+Facturation,bonjour problème,bigramme,3
+Facturation,100 amo,bigramme,3
+Facturation,cotations rdv,bigramme,3
+Facturation,modifier montant,bigramme,3
+Facturation,sage femme,bigramme,3
+Facturation,coder acte,bigramme,3
+Facturation,problème facturation,bigramme,3
+Facturation,comment passer,bigramme,3
+Facturation,problème lors,bigramme,3
+Facturation,code ngap,bigramme,3
+Facturation,problème lors facturation,trigramme,3
+Facturation,fmv 96 53,trigramme,3
+Facturation,souhaite savoir comment,trigramme,3
+Facturation,problème exonération code,trigramme,2
+Facturation,120 euros donc,trigramme,2
+Facturation,100 amo ald,trigramme,2
+Facturation,stellair applique exo,trigramme,2
+Facturation,applique exo toutes,trigramme,2
+Facturation,exo toutes cotations,trigramme,2
+Facturation,toutes cotations rdv,trigramme,2
+Facturation,cotations rdv alors,trigramme,2
+Facturation,rdv alors rejetées,trigramme,2
+Facturation,alors rejetées assurance,trigramme,2
+Facturation,rejetées assurance maladie,trigramme,2
+Facturation,assurance maladie confirme,trigramme,2
+Facturation,maladie confirme faut,trigramme,2
+Facturation,confirme faut exo,trigramme,2
+Facturation,faut exo rdv,trigramme,2
+Facturation,pav 24 euros,trigramme,2
+Facturation,problème facturation conventionnée,trigramme,2
+PC/SC,cps,unigramme,50
+PC/SC,lecteur,unigramme,48
+PC/SC,carte,unigramme,32
+PC/SC,pro,unigramme,25
+PC/SC,plus,unigramme,24
+PC/SC,stellair,unigramme,21
+PC/SC,ameli,unigramme,21
+PC/SC,connecter,unigramme,18
+PC/SC,prium,unigramme,17
+PC/SC,logiciel,unigramme,16
+PC/SC,pc,unigramme,16
+PC/SC,sc,unigramme,16
+PC/SC,gestionnaire,unigramme,16
+PC/SC,ordinateur,unigramme,14
+PC/SC,fonctionne,unigramme,13
+PC/SC,arrive,unigramme,12
+PC/SC,problème,unigramme,12
+PC/SC,peux,unigramme,11
+PC/SC,bonjour,unigramme,11
+PC/SC,reconnu,unigramme,11
+PC/SC,carte cps,bigramme,21
+PC/SC,ameli pro,bigramme,20
+PC/SC,pc sc,bigramme,15
+PC/SC,lecteur prium,bigramme,9
+PC/SC,arrive connecter,bigramme,6
+PC/SC,connecter ameli,bigramme,6
+PC/SC,gestionnaire certificat,bigramme,6
+PC/SC,certificat cps,bigramme,6
+PC/SC,carte vitale,bigramme,6
+PC/SC,mise jour,bigramme,6
+PC/SC,reste rouge,bigramme,5
+PC/SC,lecteur pc,bigramme,5
+PC/SC,gestionnaire cps,bigramme,5
+PC/SC,peux plus,bigramme,4
+PC/SC,plus reconnu,bigramme,4
+PC/SC,lecteur carte,bigramme,4
+PC/SC,connecter amélipro,bigramme,3
+PC/SC,bonjour arrive,bigramme,3
+PC/SC,reconnu ordinateur,bigramme,3
+PC/SC,plusieurs fois,bigramme,3
+PC/SC,gestionnaire certificat cps,trigramme,6
+PC/SC,connecter ameli pro,trigramme,5
+PC/SC,lecteur pc sc,trigramme,5
+PC/SC,mode pc sc,trigramme,3
+PC/SC,pc sc driver,trigramme,3
+PC/SC,lecteur prium fonctionne,trigramme,2
+PC/SC,carte cps site,trigramme,2
+PC/SC,bonjour arrive connecter,trigramme,2
+PC/SC,sequoia 15 installé,trigramme,2
+PC/SC,pc sc lecteur,trigramme,2
+PC/SC,suite échange telephonique,trigramme,2
+PC/SC,échange telephonique matin,trigramme,2
+PC/SC,telephonique matin fait,trigramme,2
+PC/SC,matin fait redémarrages,trigramme,2
+PC/SC,fait redémarrages essayé,trigramme,2
+PC/SC,redémarrages essayé changer,trigramme,2
+PC/SC,essayé changer navigateur,trigramme,2
+PC/SC,changer navigateur toujours,trigramme,2
+PC/SC,navigateur toujours bug,trigramme,2
+PC/SC,toujours bug logo,trigramme,2
+Rejets,rejet,unigramme,33
+Rejets,facture,unigramme,12
+Rejets,problème,unigramme,11
+Rejets,rejets,unigramme,8
+Rejets,lot,unigramme,7
+Rejets,mutuelle,unigramme,6
+Rejets,erreur,unigramme,6
+Rejets,comment,unigramme,6
+Rejets,plusieurs,unigramme,5
+Rejets,lots,unigramme,5
+Rejets,alors,unigramme,5
+Rejets,cpam,unigramme,5
+Rejets,bonjour,unigramme,5
+Rejets,soins,unigramme,5
+Rejets,feuille,unigramme,5
+Rejets,établissement,unigramme,4
+Rejets,message,unigramme,4
+Rejets,rejetées,unigramme,4
+Rejets,patient,unigramme,4
+Rejets,actes,unigramme,4
+Rejets,message erreur,bigramme,4
+Rejets,rejet facture,bigramme,4
+Rejets,rejet lot,bigramme,4
+Rejets,facture rejetée,bigramme,3
+Rejets,rejet paiement,bigramme,3
+Rejets,feuille soins,bigramme,3
+Rejets,assurance maladie,bigramme,2
+Rejets,prise charge,bigramme,2
+Rejets,facture alors,bigramme,2
+Rejets,paiement message,bigramme,2
+Rejets,erreur lors,bigramme,2
+Rejets,lors établissement,bigramme,2
+Rejets,premier rejet,bigramme,2
+Rejets,rejet mutuelle,bigramme,2
+Rejets,rejet actes,bigramme,2
+Rejets,actes ccam,bigramme,2
+Rejets,ccam drom,bigramme,2
+Rejets,rejets faux,bigramme,2
+Rejets,faux prix,bigramme,2
+Rejets,prix unitaire,bigramme,2
+Rejets,rejet paiement message,trigramme,2
+Rejets,paiement message erreur,trigramme,2
+Rejets,message erreur lors,trigramme,2
+Rejets,erreur lors établissement,trigramme,2
+Rejets,rejet actes ccam,trigramme,2
+Rejets,actes ccam drom,trigramme,2
+Rejets,rejets faux prix,trigramme,2
+Rejets,faux prix unitaire,trigramme,2
+Rejets,rejet facture problème,trigramme,2
+Rejets,facture problème paramétrage,trigramme,2
+Rejets,problème facturation feuille,trigramme,2
+Rejets,facturation feuille soins,trigramme,2
+Rejets,feuille soins rejetées,trigramme,2
+Rejets,soins rejetées raison,trigramme,2
+Rejets,rejetées raison discipline,trigramme,2
+Rejets,raison discipline fermée,trigramme,2
+Rejets,discipline fermée date,trigramme,2
+Rejets,fermée date prescription,trigramme,2
+Rejets,rejet lot retraiter,trigramme,2
+Rejets,rejet acte ame,trigramme,1
+SCOR,scor,unigramme,30
+SCOR,message,unigramme,11
+SCOR,erreur,unigramme,11
+SCOR,soin,unigramme,9
+SCOR,feuilles,unigramme,8
+SCOR,ordonnance,unigramme,7
+SCOR,comme,unigramme,6
+SCOR,faire,unigramme,6
+SCOR,bonjour,unigramme,6
+SCOR,feuille,unigramme,6
+SCOR,pdf,unigramme,5
+SCOR,dégradé,unigramme,5
+SCOR,papier,unigramme,5
+SCOR,merci,unigramme,5
+SCOR,lors,unigramme,5
+SCOR,vérifier,unigramme,5
+SCOR,fse,unigramme,5
+SCOR,impossible,unigramme,5
+SCOR,soins,unigramme,5
+SCOR,lots,unigramme,4
+SCOR,message erreur,bigramme,7
+SCOR,feuille soin,bigramme,5
+SCOR,feuilles soin,bigramme,4
+SCOR,feuilles soins,bigramme,4
+SCOR,erreur impossible,bigramme,3
+SCOR,impossible connecter,bigramme,3
+SCOR,mode dégradé,bigramme,3
+SCOR,dois faire,bigramme,3
+SCOR,onglet scor,bigramme,2
+SCOR,soin dégradé,bigramme,2
+SCOR,scor message,bigramme,2
+SCOR,voila message,bigramme,2
+SCOR,message secruite,bigramme,2
+SCOR,secruite socialebonjour,bigramme,2
+SCOR,socialebonjour docteur,bigramme,2
+SCOR,docteur suite,bigramme,2
+SCOR,suite démarrage,bigramme,2
+SCOR,démarrage télétransmission,bigramme,2
+SCOR,télétransmission comme,bigramme,2
+SCOR,comme convenu,bigramme,2
+SCOR,erreur impossible connecter,trigramme,3
+SCOR,feuilles soin dégradé,trigramme,2
+SCOR,voila message secruite,trigramme,2
+SCOR,message secruite socialebonjour,trigramme,2
+SCOR,secruite socialebonjour docteur,trigramme,2
+SCOR,socialebonjour docteur suite,trigramme,2
+SCOR,docteur suite démarrage,trigramme,2
+SCOR,suite démarrage télétransmission,trigramme,2
+SCOR,démarrage télétransmission comme,trigramme,2
+SCOR,télétransmission comme convenu,trigramme,2
+SCOR,comme convenu lors,trigramme,2
+SCOR,convenu lors échanges,trigramme,2
+SCOR,lors échanges voulu,trigramme,2
+SCOR,échanges voulu laisser,trigramme,2
+SCOR,voulu laisser délai,trigramme,2
+SCOR,laisser délai vérifier,trigramme,2
+SCOR,délai vérifier réception,trigramme,2
+SCOR,vérifier réception pièces,trigramme,2
+SCOR,réception pièces justificatives,trigramme,2
+SCOR,pièces justificatives scor,trigramme,2
+Stellair interface / connexion,stellair,unigramme,17
+Stellair interface / connexion,message,unigramme,13
+Stellair interface / connexion,erreur,unigramme,11
+Stellair interface / connexion,depuis,unigramme,9
+Stellair interface / connexion,sent,unigramme,6
+Stellair interface / connexion,files,unigramme,6
+Stellair interface / connexion,text,unigramme,6
+Stellair interface / connexion,faire,unigramme,6
+Stellair interface / connexion,connecter,unigramme,6
+Stellair interface / connexion,fse,unigramme,5
+Stellair interface / connexion,bonjour,unigramme,5
+Stellair interface / connexion,peux,unigramme,5
+Stellair interface / connexion,connexion,unigramme,4
+Stellair interface / connexion,impossible,unigramme,4
+Stellair interface / connexion,page,unigramme,4
+Stellair interface / connexion,matin,unigramme,4
+Stellair interface / connexion,cours,unigramme,4
+Stellair interface / connexion,mise,unigramme,3
+Stellair interface / connexion,chargement,unigramme,3
+Stellair interface / connexion,données,unigramme,3
+Stellair interface / connexion,message sent,bigramme,6
+Stellair interface / connexion,sent files,bigramme,6
+Stellair interface / connexion,files text,bigramme,6
+Stellair interface / connexion,message erreur,bigramme,5
+Stellair interface / connexion,depuis matin,bigramme,4
+Stellair interface / connexion,chargement données,bigramme,3
+Stellair interface / connexion,stellair fonctionne,bigramme,3
+Stellair interface / connexion,reste bloqué,bigramme,3
+Stellair interface / connexion,stellair médecins,bigramme,2
+Stellair interface / connexion,erreur inattendue,bigramme,2
+Stellair interface / connexion,inattendue survenue,bigramme,2
+Stellair interface / connexion,fonctionne depuis,bigramme,2
+Stellair interface / connexion,matin normal,bigramme,2
+Stellair interface / connexion,normal manipulation,bigramme,2
+Stellair interface / connexion,manipulation faire,bigramme,2
+Stellair interface / connexion,bloqué chargement,bigramme,2
+Stellair interface / connexion,données cours,bigramme,2
+Stellair interface / connexion,coupure réseau,bigramme,2
+Stellair interface / connexion,connecter stellair,bigramme,2
+Stellair interface / connexion,stellair identifiant,bigramme,2
+Stellair interface / connexion,message sent files,trigramme,6
+Stellair interface / connexion,sent files text,trigramme,6
+Stellair interface / connexion,erreur inattendue survenue,trigramme,2
+Stellair interface / connexion,stellair fonctionne depuis,trigramme,2
+Stellair interface / connexion,fonctionne depuis matin,trigramme,2
+Stellair interface / connexion,depuis matin normal,trigramme,2
+Stellair interface / connexion,matin normal manipulation,trigramme,2
+Stellair interface / connexion,normal manipulation faire,trigramme,2
+Stellair interface / connexion,reste bloqué chargement,trigramme,2
+Stellair interface / connexion,bloqué chargement données,trigramme,2
+Stellair interface / connexion,chargement données cours,trigramme,2
+Stellair interface / connexion,connexion impossible depuis,trigramme,1
+Stellair interface / connexion,impossible depuis 24,trigramme,1
+Stellair interface / connexion,déconnexions fréquentes poste,trigramme,1
+Stellair interface / connexion,fréquentes poste travail,trigramme,1
+Stellair interface / connexion,poste travail domicile,trigramme,1
+Stellair interface / connexion,travail domicile malgré,trigramme,1
+Stellair interface / connexion,domicile malgré mise,trigramme,1
+Stellair interface / connexion,malgré mise place,trigramme,1
+Stellair interface / connexion,mise place différentes,trigramme,1
+TPAMC/AMO,amc,unigramme,31
+TPAMC/AMO,mutuelle,unigramme,29
+TPAMC/AMO,payant,unigramme,27
+TPAMC/AMO,tiers,unigramme,25
+TPAMC/AMO,convention,unigramme,15
+TPAMC/AMO,bonjour,unigramme,13
+TPAMC/AMO,faire,unigramme,13
+TPAMC/AMO,adresse,unigramme,12
+TPAMC/AMO,plus,unigramme,11
+TPAMC/AMO,problème,unigramme,10
+TPAMC/AMO,inter,unigramme,10
+TPAMC/AMO,depuis,unigramme,9
+TPAMC/AMO,merci,unigramme,8
+TPAMC/AMO,mutuelles,unigramme,8
+TPAMC/AMO,bien,unigramme,8
+TPAMC/AMO,intégral,unigramme,7
+TPAMC/AMO,facturation,unigramme,7
+TPAMC/AMO,patient,unigramme,7
+TPAMC/AMO,erreur,unigramme,6
+TPAMC/AMO,demande,unigramme,6
+TPAMC/AMO,tiers payant,bigramme,25
+TPAMC/AMO,inter amc,bigramme,10
+TPAMC/AMO,payant intégral,bigramme,7
+TPAMC/AMO,payant mutuelle,bigramme,4
+TPAMC/AMO,merci aide,bigramme,4
+TPAMC/AMO,convention mutuelle,bigramme,3
+TPAMC/AMO,message erreur,bigramme,3
+TPAMC/AMO,faire payer,bigramme,3
+TPAMC/AMO,convention trouvée,bigramme,3
+TPAMC/AMO,intégral fonctionne,bigramme,3
+TPAMC/AMO,payant amc,bigramme,3
+TPAMC/AMO,bal sv,bigramme,3
+TPAMC/AMO,adresse boite,bigramme,3
+TPAMC/AMO,boite lettres,bigramme,3
+TPAMC/AMO,certaines mutuelles,bigramme,2
+TPAMC/AMO,mutuelle corse,bigramme,2
+TPAMC/AMO,ça fonctionne,bigramme,2
+TPAMC/AMO,pré requis,bigramme,2
+TPAMC/AMO,requis pc,bigramme,2
+TPAMC/AMO,pc fixe,bigramme,2
+TPAMC/AMO,tiers payant intégral,trigramme,7
+TPAMC/AMO,tiers payant mutuelle,trigramme,4
+TPAMC/AMO,payant intégral fonctionne,trigramme,3
+TPAMC/AMO,adresse boite lettres,trigramme,3
+TPAMC/AMO,pré requis pc,trigramme,2
+TPAMC/AMO,requis pc fixe,trigramme,2
+TPAMC/AMO,pc fixe puisse,trigramme,2
+TPAMC/AMO,fixe puisse lire,trigramme,2
+TPAMC/AMO,puisse lire attestation,trigramme,2
+TPAMC/AMO,lire attestation amc,trigramme,2
+TPAMC/AMO,attestation amc récupérer,trigramme,2
+TPAMC/AMO,amc récupérer données,trigramme,2
+TPAMC/AMO,récupérer données mutuelle,trigramme,2
+TPAMC/AMO,aucune convention trouvée,trigramme,2
+TPAMC/AMO,convention trouvée mutuelle,trigramme,2
+TPAMC/AMO,trouvée mutuelle type,trigramme,2
+TPAMC/AMO,mutuelle type tiers,trigramme,2
+TPAMC/AMO,type tiers payant,trigramme,2
+TPAMC/AMO,tiers payant sélectionnés,trigramme,2
+TPAMC/AMO,aide rapide concernant,trigramme,2
+TPE,plus,unigramme,17
+TPE,contact,unigramme,15
+TPE,paiement,unigramme,12
+TPE,depuis,unigramme,9
+TPE,lecteur,unigramme,9
+TPE,mise,unigramme,9
+TPE,carte,unigramme,9
+TPE,cb,unigramme,9
+TPE,tpe,unigramme,8
+TPE,impossible,unigramme,6
+TPE,peux,unigramme,6
+TPE,faire,unigramme,6
+TPE,jour,unigramme,6
+TPE,bancaire,unigramme,5
+TPE,bancaires,unigramme,5
+TPE,iwl350,unigramme,5
+TPE,suite,unigramme,5
+TPE,cartes,unigramme,4
+TPE,comment,unigramme,4
+TPE,probleme,unigramme,4
+TPE,paiement contact,bigramme,6
+TPE,mise jour,bigramme,6
+TPE,peux plus,bigramme,5
+TPE,depuis mise,bigramme,4
+TPE,paiement cb,bigramme,4
+TPE,plus faire,bigramme,3
+TPE,cartes bancaires,bigramme,3
+TPE,contact marche,bigramme,3
+TPE,faire contact,bigramme,2
+TPE,contact lecteur,bigramme,2
+TPE,jour lecteur,bigramme,2
+TPE,suite mise,bigramme,2
+TPE,jour peux,bigramme,2
+TPE,plus passer,bigramme,2
+TPE,passer cartes,bigramme,2
+TPE,bancaires contact,bigramme,2
+TPE,contact faut,bigramme,2
+TPE,faut initialiser,bigramme,2
+TPE,initialiser sais,bigramme,2
+TPE,sais comment,bigramme,2
+TPE,depuis mise jour,trigramme,4
+TPE,peux plus faire,trigramme,3
+TPE,plus faire contact,trigramme,2
+TPE,mise jour lecteur,trigramme,2
+TPE,suite mise jour,trigramme,2
+TPE,mise jour peux,trigramme,2
+TPE,jour peux plus,trigramme,2
+TPE,peux plus passer,trigramme,2
+TPE,plus passer cartes,trigramme,2
+TPE,passer cartes bancaires,trigramme,2
+TPE,cartes bancaires contact,trigramme,2
+TPE,bancaires contact faut,trigramme,2
+TPE,contact faut initialiser,trigramme,2
+TPE,faut initialiser sais,trigramme,2
+TPE,initialiser sais comment,trigramme,2
+TPE,sais comment faire,trigramme,2
+TPE,suite maj paiement,trigramme,2
+TPE,maj paiement contact,trigramme,2
+TPE,paiement contact fonctionne,trigramme,2
+TPE,contact fonctionne plus,trigramme,2
+ADV,souhaite,unigramme,16
+ADV,stellair,unigramme,15
+ADV,bonjour,unigramme,14
+ADV,abonnement,unigramme,14
+ADV,lecteur,unigramme,13
+ADV,mail,unigramme,8
+ADV,neo,unigramme,7
+ADV,nouveau,unigramme,7
+ADV,contrat,unigramme,7
+ADV,si,unigramme,7
+ADV,merci,unigramme,7
+ADV,facture,unigramme,7
+ADV,rdv,unigramme,6
+ADV,compte,unigramme,6
+ADV,demande,unigramme,6
+ADV,adresse,unigramme,6
+ADV,avoir,unigramme,5
+ADV,attestation,unigramme,5
+ADV,2024,unigramme,5
+ADV,retour,unigramme,5
+ADV,abonnement stellair,bigramme,5
+ADV,lecteur neo,bigramme,5
+ADV,nouveau lecteur,bigramme,3
+ADV,lecteur prium,bigramme,3
+ADV,savoir si,bigramme,3
+ADV,adresse mail,bigramme,3
+ADV,souhaite obtenir,bigramme,3
+ADV,avoir attestation,bigramme,2
+ADV,fait plusieurs,bigramme,2
+ADV,prix lecteur,bigramme,2
+ADV,vincent gourvat,bigramme,2
+ADV,modalites arreter,bigramme,2
+ADV,arreter abonnement,bigramme,2
+ADV,abonnement terme,bigramme,2
+ADV,terme contrat,bigramme,2
+ADV,souhaite résilier,bigramme,2
+ADV,tpe remplacants,bigramme,2
+ADV,si oui,bigramme,2
+ADV,stellair 2024,bigramme,2
+ADV,rdv telephonique,bigramme,2
+ADV,prix lecteur neo,trigramme,2
+ADV,modalites arreter abonnement,trigramme,2
+ADV,arreter abonnement terme,trigramme,2
+ADV,abonnement terme contrat,trigramme,2
+ADV,souhaite savoir si,trigramme,2
+ADV,souhaite obtenir factures,trigramme,2
+ADV,comment avoir attestation,trigramme,1
+ADV,avoir attestation logiciel,trigramme,1
+ADV,bonjour ça fait,trigramme,1
+ADV,ça fait plusieurs,trigramme,1
+ADV,fait plusieurs souscrit,trigramme,1
+ADV,plusieurs souscrit stellair,trigramme,1
+ADV,souscrit stellair toujourd,trigramme,1
+ADV,stellair toujourd accompganement,trigramme,1
+ADV,toujourd accompganement formation,trigramme,1
+ADV,accompganement formation utilisation,trigramme,1
+ADV,formation utilisation pourriez,trigramme,1
+ADV,utilisation pourriez fixés,trigramme,1
+ADV,pourriez fixés rdv,trigramme,1
+ADV,fixés rdv formation,trigramme,1
+Carte CPS,cps,unigramme,66
+Carte CPS,carte,unigramme,46
+Carte CPS,nouvelle,unigramme,16
+Carte CPS,message,unigramme,14
+Carte CPS,stellair,unigramme,13
+Carte CPS,plus,unigramme,13
+Carte CPS,numéro,unigramme,11
+Carte CPS,facturation,unigramme,11
+Carte CPS,changement,unigramme,10
+Carte CPS,certificat,unigramme,8
+Carte CPS,problème,unigramme,7
+Carte CPS,faire,unigramme,7
+Carte CPS,lecteur,unigramme,7
+Carte CPS,apparait,unigramme,7
+Carte CPS,lecture,unigramme,6
+Carte CPS,bonjour,unigramme,6
+Carte CPS,fse,unigramme,6
+Carte CPS,adeli,unigramme,6
+Carte CPS,reçu,unigramme,6
+Carte CPS,depuis,unigramme,6
+Carte CPS,carte cps,bigramme,36
+Carte CPS,nouvelle carte,bigramme,10
+Carte CPS,numéro adeli,bigramme,6
+Carte CPS,changement carte,bigramme,5
+Carte CPS,lecture carte,bigramme,4
+Carte CPS,certificat cps,bigramme,4
+Carte CPS,cps non,bigramme,4
+Carte CPS,message erreur,bigramme,4
+Carte CPS,nouvelle cps,bigramme,3
+Carte CPS,message suivant,bigramme,3
+Carte CPS,carte vitale,bigramme,3
+Carte CPS,non valide,bigramme,3
+Carte CPS,cps fonctionne,bigramme,3
+Carte CPS,feuilles soins,bigramme,3
+Carte CPS,facturation ps,bigramme,3
+Carte CPS,ps correspond,bigramme,3
+Carte CPS,suite changement,bigramme,3
+Carte CPS,facturation sous,bigramme,3
+Carte CPS,reçu nouvelle,bigramme,3
+Carte CPS,sous numéro,bigramme,3
+Carte CPS,nouvelle carte cps,trigramme,10
+Carte CPS,lecture carte cps,trigramme,4
+Carte CPS,changement carte cps,trigramme,4
+Carte CPS,cps non valide,trigramme,3
+Carte CPS,facturation ps correspond,trigramme,3
+Carte CPS,reçu nouvelle carte,trigramme,3
+Carte CPS,problème lecture carte,trigramme,2
+Carte CPS,certificat cps révoqué,trigramme,2
+Carte CPS,certificat cps non,trigramme,2
+Carte CPS,carte cps non,trigramme,2
+Carte CPS,suite réception nouvelle,trigramme,2
+Carte CPS,réception nouvelle carte,trigramme,2
+Carte CPS,carte cps changement,trigramme,2
+Carte CPS,cps changement numéro,trigramme,2
+Carte CPS,changement numéro adeli,trigramme,2
+Carte CPS,numéro adeli retrouve,trigramme,2
+Carte CPS,adeli retrouve plus,trigramme,2
+Carte CPS,retrouve plus anciennes,trigramme,2
+Carte CPS,plus anciennes feuilles,trigramme,2
+Carte CPS,anciennes feuilles soins,trigramme,2
+Teleservices,travail,unigramme,14
+Teleservices,arrêt,unigramme,8
+Teleservices,arrêts,unigramme,7
+Teleservices,droits,unigramme,6
+Teleservices,faire,unigramme,6
+Teleservices,bonjour,unigramme,5
+Teleservices,problème,unigramme,5
+Teleservices,accès,unigramme,4
+Teleservices,employeur,unigramme,4
+Teleservices,ligne,unigramme,4
+Teleservices,stellair,unigramme,4
+Teleservices,dr,unigramme,4
+Teleservices,patients,unigramme,3
+Teleservices,numéro,unigramme,3
+Teleservices,message,unigramme,3
+Teleservices,erreur,unigramme,3
+Teleservices,alors,unigramme,3
+Teleservices,noté,unigramme,3
+Teleservices,sociale,unigramme,3
+Teleservices,plusieurs,unigramme,3
+Teleservices,arrêt travail,bigramme,8
+Teleservices,message erreur,bigramme,3
+Teleservices,droits ligne,bigramme,3
+Teleservices,certains patients,bigramme,2
+Teleservices,peux faire,bigramme,2
+Teleservices,plus accès,bigramme,2
+Teleservices,finess noté,bigramme,2
+Teleservices,arrêts travail,bigramme,2
+Teleservices,sécurité sociale,bigramme,2
+Teleservices,arrets travail,bigramme,2
+Teleservices,acquisition droits,bigramme,2
+Teleservices,problème lors,bigramme,2
+Teleservices,imprimer volet,bigramme,2
+Teleservices,volet employeur,bigramme,2
+Teleservices,si plusieurs,bigramme,2
+Teleservices,plusieurs prolongations,bigramme,2
+Teleservices,prolongations arrêt,bigramme,2
+Teleservices,travail comment,bigramme,2
+Teleservices,comment récupérer,bigramme,2
+Teleservices,récupérer duplicatas,bigramme,2
+Teleservices,acquisition droits ligne,trigramme,2
+Teleservices,imprimer volet employeur,trigramme,2
+Teleservices,si plusieurs prolongations,trigramme,2
+Teleservices,plusieurs prolongations arrêt,trigramme,2
+Teleservices,prolongations arrêt travail,trigramme,2
+Teleservices,arrêt travail comment,trigramme,2
+Teleservices,travail comment récupérer,trigramme,2
+Teleservices,comment récupérer duplicatas,trigramme,2
+Teleservices,récupérer duplicatas ensemble,trigramme,2
+Teleservices,duplicatas ensemble arrêts,trigramme,2
+Teleservices,remplaçant dr geerts,trigramme,2
+Teleservices,logiciel trouve droits,trigramme,1
+Teleservices,trouve droits certains,trigramme,1
+Teleservices,droits certains patients,trigramme,1
+Teleservices,certains patients ame,trigramme,1
+Teleservices,patients ame coup,trigramme,1
+Teleservices,ame coup peux,trigramme,1
+Teleservices,coup peux faire,trigramme,1
+Teleservices,peux faire tiers,trigramme,1
+Teleservices,faire tiers payant,trigramme,1
+Recettes,recettes,unigramme,34
+Recettes,montant,unigramme,14
+Recettes,factures,unigramme,14
+Recettes,paiement,unigramme,13
+Recettes,recette,unigramme,11
+Recettes,comment,unigramme,11
+Recettes,comptabilité,unigramme,11
+Recettes,stellair,unigramme,11
+Recettes,jour,unigramme,10
+Recettes,amo,unigramme,9
+Recettes,facture,unigramme,9
+Recettes,arrive,unigramme,9
+Recettes,fse,unigramme,9
+Recettes,affid,unigramme,9
+Recettes,faire,unigramme,9
+Recettes,depuis,unigramme,7
+Recettes,comme,unigramme,7
+Recettes,deux,unigramme,7
+Recettes,2024,unigramme,6
+Recettes,amc,unigramme,6
+Recettes,montant paiement,bigramme,4
+Recettes,recettes depuis,bigramme,3
+Recettes,onglet recette,bigramme,3
+Recettes,deux factures,bigramme,3
+Recettes,probleme lors,bigramme,3
+Recettes,lors réglement,bigramme,3
+Recettes,affid recette,bigramme,3
+Recettes,faire comptabilité,bigramme,3
+Recettes,depuis 11,bigramme,2
+Recettes,11 12,bigramme,2
+Recettes,12 2024,bigramme,2
+Recettes,2024 recettes,bigramme,2
+Recettes,recettes colonnes,bigramme,2
+Recettes,colonnes apparaissent,bigramme,2
+Recettes,apparaissent normalement,bigramme,2
+Recettes,normalement particulier,bigramme,2
+Recettes,particulier montant,bigramme,2
+Recettes,paiement correctement,bigramme,2
+Recettes,correctement renseigné,bigramme,2
+Recettes,renseigné si,bigramme,2
+Recettes,recettes depuis 11,trigramme,2
+Recettes,depuis 11 12,trigramme,2
+Recettes,11 12 2024,trigramme,2
+Recettes,12 2024 recettes,trigramme,2
+Recettes,2024 recettes colonnes,trigramme,2
+Recettes,recettes colonnes apparaissent,trigramme,2
+Recettes,colonnes apparaissent normalement,trigramme,2
+Recettes,apparaissent normalement particulier,trigramme,2
+Recettes,normalement particulier montant,trigramme,2
+Recettes,particulier montant paiement,trigramme,2
+Recettes,montant paiement correctement,trigramme,2
+Recettes,paiement correctement renseigné,trigramme,2
+Recettes,correctement renseigné si,trigramme,2
+Recettes,renseigné si fait,trigramme,2
+Recettes,si fait exporter,trigramme,2
+Recettes,fait exporter fichier,trigramme,2
+Recettes,exporter fichier exporté,trigramme,2
+Recettes,fichier exporté colonne,trigramme,2
+Recettes,exporté colonne montant,trigramme,2
+Recettes,colonne montant paiement,trigramme,2
+MAN,jour,unigramme,8
+MAN,lecteur,unigramme,7
+MAN,stellair,unigramme,4
+MAN,fois,unigramme,4
+MAN,mise,unigramme,4
+MAN,plusieurs,unigramme,3
+MAN,prium,unigramme,3
+MAN,mettre,unigramme,3
+MAN,tous,unigramme,3
+MAN,faire,unigramme,3
+MAN,bonjour,unigramme,3
+MAN,jours,unigramme,2
+MAN,demande,unigramme,2
+MAN,si,unigramme,2
+MAN,15j,unigramme,2
+MAN,absence,unigramme,1
+MAN,mention,unigramme,1
+MAN,apres,unigramme,1
+MAN,appels,unigramme,1
+MAN,serveur,unigramme,1
+MAN,mise jour,bigramme,4
+MAN,lecteur prium,bigramme,2
+MAN,mettre jour,bigramme,2
+MAN,tous jours,bigramme,2
+MAN,plusieurs fois,bigramme,2
+MAN,absence mention,bigramme,1
+MAN,mention stellair,bigramme,1
+MAN,stellair apres,bigramme,1
+MAN,apres plusieurs,bigramme,1
+MAN,plusieurs appels,bigramme,1
+MAN,appels serveur,bigramme,1
+MAN,prium mettre,bigramme,1
+MAN,mettre niveau,bigramme,1
+MAN,niveau activation,bigramme,1
+MAN,activation passerelle,bigramme,1
+MAN,passerelle echo,bigramme,1
+MAN,lecteur semble,bigramme,1
+MAN,semble vouloir,bigramme,1
+MAN,vouloir mettre,bigramme,1
+MAN,jours demandé,bigramme,1
+MAN,absence mention stellair,trigramme,1
+MAN,mention stellair apres,trigramme,1
+MAN,stellair apres plusieurs,trigramme,1
+MAN,apres plusieurs appels,trigramme,1
+MAN,plusieurs appels serveur,trigramme,1
+MAN,lecteur prium mettre,trigramme,1
+MAN,prium mettre niveau,trigramme,1
+MAN,mettre niveau activation,trigramme,1
+MAN,niveau activation passerelle,trigramme,1
+MAN,activation passerelle echo,trigramme,1
+MAN,lecteur semble vouloir,trigramme,1
+MAN,semble vouloir mettre,trigramme,1
+MAN,vouloir mettre jour,trigramme,1
+MAN,tous jours demandé,trigramme,1
+MAN,jours demandé faire,trigramme,1
+MAN,demandé faire maj,trigramme,1
+MAN,faire maj lecteur,trigramme,1
+MAN,maj lecteur chaque,trigramme,1
+MAN,lecteur chaque fois,trigramme,1
+MAN,chaque fois message,trigramme,1
+Appairage,lecteur,unigramme,21
+Appairage,compte,unigramme,14
+Appairage,lecteurs,unigramme,13
+Appairage,dr,unigramme,8
+Appairage,appairer,unigramme,7
+Appairage,bonjour,unigramme,7
+Appairage,souhaite,unigramme,6
+Appairage,ajouter,unigramme,5
+Appairage,stellair,unigramme,5
+Appairage,com,unigramme,5
+Appairage,merci,unigramme,5
+Appairage,rousseau,unigramme,5
+Appairage,avouac,unigramme,5
+Appairage,prium,unigramme,4
+Appairage,faire,unigramme,4
+Appairage,pouvez,unigramme,4
+Appairage,accès,unigramme,4
+Appairage,foret,unigramme,4
+Appairage,marie,unigramme,4
+Appairage,drs,unigramme,4
+Appairage,appairer lecteur,bigramme,3
+Appairage,lecteur prium,bigramme,3
+Appairage,accès lecteurs,bigramme,3
+Appairage,marie lou,bigramme,3
+Appairage,souhaite appairer,bigramme,2
+Appairage,ajouter lecteur,bigramme,2
+Appairage,nouveaux collaborateurs,bigramme,2
+Appairage,appairer lecteurs,bigramme,2
+Appairage,samy nabih,bigramme,2
+Appairage,gmail com,bigramme,2
+Appairage,bonjour pouvez,bigramme,2
+Appairage,souhaite faire,bigramme,2
+Appairage,faire demande,bigramme,2
+Appairage,demande rattachement,bigramme,2
+Appairage,dr julien,bigramme,2
+Appairage,bonjour souhaite,bigramme,2
+Appairage,souhaite ajouter,bigramme,2
+Appairage,ajouter lecteurs,bigramme,2
+Appairage,rosalie rousseau,bigramme,2
+Appairage,lou avouac,bigramme,2
+Appairage,souhaite appairer lecteur,trigramme,2
+Appairage,ajouter lecteur prium,trigramme,2
+Appairage,souhaite faire demande,trigramme,2
+Appairage,faire demande rattachement,trigramme,2
+Appairage,bonjour souhaite ajouter,trigramme,2
+Appairage,marie lou avouac,trigramme,2
+Appairage,appairer lecteur neo,trigramme,1
+Appairage,lecteur neo carte,trigramme,1
+Appairage,neo carte cps,trigramme,1
+Appairage,voudrais ajouter lecteur,trigramme,1
+Appairage,lecteur prium compte,trigramme,1
+Appairage,prium compte stellair,trigramme,1
+Appairage,compte stellair dispose,trigramme,1
+Appairage,stellair dispose onglet,trigramme,1
+Appairage,dispose onglet stellair,trigramme,1
+Appairage,onglet stellair dit,trigramme,1
+Appairage,stellair dit lecteur,trigramme,1
+Appairage,installation option appairage,trigramme,1
+Appairage,option appairage apparait,trigramme,1
+Appairage,appairage apparait lecteur,trigramme,1
+ApCv,lecteur,unigramme,3
+ApCv,appli,unigramme,2
+ApCv,carte,unigramme,2
+ApCv,vitale,unigramme,2
+ApCv,cv,unigramme,2
+ApCv,qr,unigramme,2
+ApCv,code,unigramme,2
+ApCv,utiliser,unigramme,1
+ApCv,stellair,unigramme,1
+ApCv,compatible,unigramme,1
+ApCv,application,unigramme,1
+ApCv,quand,unigramme,1
+ApCv,essaie,unigramme,1
+ApCv,faire,unigramme,1
+ApCv,lecture,unigramme,1
+ApCv,plante,unigramme,1
+ApCv,redémarre,unigramme,1
+ApCv,probleme,unigramme,1
+ApCv,installation,unigramme,1
+ApCv,liteo2d,unigramme,1
+ApCv,carte vitale,bigramme,2
+ApCv,qr code,bigramme,2
+ApCv,utiliser stellair,bigramme,1
+ApCv,stellair appli,bigramme,1
+ApCv,appli carte,bigramme,1
+ApCv,lecteur compatible,bigramme,1
+ApCv,compatible application,bigramme,1
+ApCv,application carte,bigramme,1
+ApCv,quand essaie,bigramme,1
+ApCv,essaie faire,bigramme,1
+ApCv,faire lecture,bigramme,1
+ApCv,lecture cv,bigramme,1
+ApCv,cv appli,bigramme,1
+ApCv,appli cv,bigramme,1
+ApCv,cv lecteur,bigramme,1
+ApCv,lecteur plante,bigramme,1
+ApCv,plante redémarre,bigramme,1
+ApCv,probleme installation,bigramme,1
+ApCv,installation liteo2d,bigramme,1
+ApCv,problème lecteur,bigramme,1
+ApCv,utiliser stellair appli,trigramme,1
+ApCv,stellair appli carte,trigramme,1
+ApCv,appli carte vitale,trigramme,1
+ApCv,lecteur compatible application,trigramme,1
+ApCv,compatible application carte,trigramme,1
+ApCv,application carte vitale,trigramme,1
+ApCv,quand essaie faire,trigramme,1
+ApCv,essaie faire lecture,trigramme,1
+ApCv,faire lecture cv,trigramme,1
+ApCv,lecture cv appli,trigramme,1
+ApCv,cv appli cv,trigramme,1
+ApCv,appli cv lecteur,trigramme,1
+ApCv,cv lecteur plante,trigramme,1
+ApCv,lecteur plante redémarre,trigramme,1
+ApCv,probleme installation liteo2d,trigramme,1
+ApCv,problème lecteur qr,trigramme,1
+ApCv,lecteur qr code,trigramme,1
+ApCv,qr code litéo,trigramme,1
+ApCv,code litéo 2d,trigramme,1
+ApCv,litéo 2d lit,trigramme,1
+fonctionnalités,possible,unigramme,1
+fonctionnalités,remettre,unigramme,1
+fonctionnalités,possibilte,unigramme,1
+fonctionnalités,imprimer,unigramme,1
+fonctionnalités,transmettre,unigramme,1
+fonctionnalités,arrets,unigramme,1
+fonctionnalités,travail,unigramme,1
+fonctionnalités,svp,unigramme,1
+fonctionnalités,possible remettre,bigramme,1
+fonctionnalités,remettre possibilte,bigramme,1
+fonctionnalités,possibilte imprimer,bigramme,1
+fonctionnalités,imprimer transmettre,bigramme,1
+fonctionnalités,transmettre arrets,bigramme,1
+fonctionnalités,arrets travail,bigramme,1
+fonctionnalités,travail svp,bigramme,1
+fonctionnalités,possible remettre possibilte,trigramme,1
+fonctionnalités,remettre possibilte imprimer,trigramme,1
+fonctionnalités,possibilte imprimer transmettre,trigramme,1
+fonctionnalités,imprimer transmettre arrets,trigramme,1
+fonctionnalités,transmettre arrets travail,trigramme,1
+fonctionnalités,arrets travail svp,trigramme,1
+Ordoclic,tarif,unigramme,1
+Ordoclic,option,unigramme,1
+Ordoclic,ordonnance,unigramme,1
+Ordoclic,numérique,unigramme,1
+Ordoclic,problème,unigramme,1
+Ordoclic,création,unigramme,1
+Ordoclic,ordonnances,unigramme,1
+Ordoclic,médicale,unigramme,1
+Ordoclic,tarif option,bigramme,1
+Ordoclic,option ordonnance,bigramme,1
+Ordoclic,ordonnance numérique,bigramme,1
+Ordoclic,problème création,bigramme,1
+Ordoclic,création ordonnances,bigramme,1
+Ordoclic,ordonnances médicale,bigramme,1
+Ordoclic,tarif option ordonnance,trigramme,1
+Ordoclic,option ordonnance numérique,trigramme,1
+Ordoclic,problème création ordonnances,trigramme,1
+Ordoclic,création ordonnances médicale,trigramme,1

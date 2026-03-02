@@ -27,8 +27,7 @@ wheels/
 .installed.cfg
 *.egg
 
-# Fichiers de données
-data/
+# Fichiers de données (hors data/)
 *.xls
 *.xlsx
 *.csv
@@ -36,7 +35,21 @@ data/
 *.db
 *.sqlite
 
-# Fichiers de cache
+# Inclure le dossier data/ et ses fichiers de données
+!data/
+!data/**/*.xls
+!data/**/*.xlsx
+!data/**/*.csv
+!data/**/*.parquet
+
+# Exclure les caches et fichiers générés dans data/
+data/**/Cache/
+data/**/*.pkl
+data/**/*.db
+data/**/*.sqlite
+data/**/.DS_Store
+
+# Fichiers de cache (hors data)
 *.cache
 .cache/
 Cache/
