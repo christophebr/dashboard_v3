@@ -1,3 +1,8 @@
+import os
+if not os.path.exists('config.py') and os.path.exists('config.example.py'):
+    import shutil
+    shutil.copy('config.example.py', 'config.py')
+
 import streamlit as st
 from datetime import datetime, date, timedelta
 from utils.authentification import authenticate_user
@@ -1604,42 +1609,24 @@ elif authentification_status:
                 
                 st.dataframe(df_evaluation_filre, use_container_width=True)
 
-            import matplotlib.pyplot as plt
+            def render_evaluation_table(df):
+                """Affiche les évaluations en tableau Plotly (sans matplotlib pour déploiement léger)."""
+                if df.empty:
+                    st.warning("⚠️ Aucune donnée disponible pour la sélection.")
+                    return
+                import plotly.graph_objects as go
+                moyenne_score = round(df["average_score"].mean(), 2)
+                st.markdown(f"📝 **Évaluations managériales** — Score moyen : **{moyenne_score}**")
+                df_display = df.reset_index()
+                fig = go.Figure(data=[go.Table(
+                    header=dict(values=list(df_display.columns), fill_color='#1f77b4', font=dict(color='white'), align='left'),
+                    cells=dict(values=[df_display[c].astype(str).tolist() for c in df_display.columns], align='left')
+                )])
+                fig.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=min(400, 50 + len(df) * 25))
+                st.plotly_chart(fig, use_container_width=True)
 
-            def render_evaluation_as_image(df, image_path="evaluation_image.png"):
-                # Calcul de la taille de l'image selon le nombre de lignes
-                height = max(2, len(df) * 0.4 + 2)
-                fig, ax = plt.subplots(figsize=(12, height))
-                ax.axis("off")
-
-                # Titre
-                plt.text(0, 1.05, "📝 Évaluations managériales", fontsize=16, fontweight='bold', transform=ax.transAxes)
-
-                # Score moyen
-                if not df.empty:
-                    moyenne_score = round(df["average_score"].mean(), 2)
-                    plt.text(0, 1.00, f"🎯 Score moyen des évaluations : {moyenne_score}", fontsize=13, transform=ax.transAxes)
-                else:
-                    plt.text(0, 1.00, "⚠️ Aucune donnée disponible pour la sélection.", fontsize=13, color="red", transform=ax.transAxes)
-
-                # Tableau
-                if not df.empty:
-                    # Conversion en liste pour matplotlib
-                    table_data = df.reset_index().values.tolist()
-                    column_labels = df.reset_index().columns
-                    table = ax.table(cellText=table_data, colLabels=column_labels, loc='center', cellLoc='center')
-                    table.auto_set_font_size(False)
-                    table.set_fontsize(10)
-                    table.scale(1, 1.3)
-
-                plt.tight_layout()
-                plt.savefig(image_path, dpi=300, bbox_inches='tight')
-                plt.close()
-
-                return image_path
-            
             df_eval_filtered = filter_evaluation(df_evaluation, agents, periodes_eval)
-            render_evaluation_as_image(df_eval_filtered)
+            render_evaluation_table(df_eval_filtered)
 
 
             
