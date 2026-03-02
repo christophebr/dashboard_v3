@@ -1,0 +1,82 @@
+# Environnement virtuel
+venv/
+env/
+ENV/
+testenv/
+dashboard_v2.git/
+
+# Fichiers Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Fichiers de données
+data/
+*.xls
+*.xlsx
+*.csv
+*.parquet
+*.db
+*.sqlite
+
+# Fichiers de cache
+*.cache
+.cache/
+Cache/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Fichiers de logs
+*.log
+logs/
+
+# Fichiers de configuration sensibles
+config.py
+hashed_pw.pkl
+.env
+*.key
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Fichiers IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Fichiers de rapport générés
+*.html
+*.pdf
+*.pptx
+rapport/
+
+# Fichiers de diagnostic
+debug_*.py
+test_*.py
+
+# Fichiers de déploiement locaux (garder les templates)
+# config.example.py est versionné

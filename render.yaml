@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: dashboard-support
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: cp config.example.py config.py 2>/dev/null || true; streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

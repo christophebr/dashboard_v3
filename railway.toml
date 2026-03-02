@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pip install -r requirements.txt"
+
+[deploy]
+startCommand = "cp config.example.py config.py 2>/dev/null || true; streamlit run app.py --server.port $PORT --server.address 0.0.0.0"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
