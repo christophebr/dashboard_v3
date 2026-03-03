@@ -6,7 +6,6 @@ if not os.path.exists('hashed_pw.pkl') and os.path.exists('config.example.py'):
 
 import streamlit as st
 from datetime import datetime, date, timedelta
-from utils.authentification import authenticate_user
 from data_processing.aircall_processing import process_aircall_data, def_df_support, agents_all, line_tous, agents_support, line_support, line_armatis, agents_armatis, load_aircall_data
 #from data_processing.aircall_processing import get_df_support
 from data_processing.hubspot_processing import process_hubspot_data, load_hubspot_data
