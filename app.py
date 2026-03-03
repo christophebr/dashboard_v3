@@ -1,4 +1,12 @@
 import os
+import sys
+from pathlib import Path
+
+# S'assurer que le dossier du projet est bien dans sys.path pour les imports (Railway / environnements déployés)
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 # En déploiement (sans hashed_pw.pkl), toujours utiliser config.example pour prendre les secrets à jour
 if not os.path.exists('hashed_pw.pkl') and os.path.exists('config.example.py'):
     import shutil
