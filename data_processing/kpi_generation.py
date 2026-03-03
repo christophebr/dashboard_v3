@@ -2809,29 +2809,28 @@ def graph_tickets_n1_par_semaine_stellair(df_tickets, agent_filter=None, weeks_t
 
 
 # --- Graphiques Yelda (chatbot Stellair) ---
-def graph_yelda_evaluation_intentions(intentions_satisfaisant, intentions_non_satisfaisant):
-    """Graphique en barres : répartition reponse_agent_satisfaisante vs non_satisfaisante (Intentions - évaluation utilisateurs)."""
-    if intentions_satisfaisant == 0 and intentions_non_satisfaisant == 0:
+def graph_yelda_evaluation_intentions(intentions_satisfaisant, intentions_non_satisfaisant, intentions_sans_avis=0):
+    """Graphique camembert : répartition utilisateur satisfait / non satisfait / sans avis (Intentions)."""
+    if intentions_satisfaisant == 0 and intentions_non_satisfaisant == 0 and intentions_sans_avis == 0:
         fig = go.Figure()
         fig.add_annotation(text="Aucune donnée Intentions (reponse_agent_satisfaisante/non_satisfaisante)", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
         fig.update_layout(template="plotly_dark", title="Évaluation utilisateurs (Intentions)")
         return fig
-    labels = ['Satisfaisant', 'Non satisfaisant']
-    values = [intentions_satisfaisant, intentions_non_satisfaisant]
-    colors = ['#2ecc71', '#e74c3c']
-    fig = go.Figure(data=[go.Bar(x=labels, y=values, marker_color=colors)])
+    labels = ['Satisfaisant', 'Non satisfaisant', 'Sans avis']
+    values = [intentions_satisfaisant, intentions_non_satisfaisant, intentions_sans_avis]
+    colors = ['#2ecc71', '#e74c3c', '#95a5a6']  # vert, rouge, gris
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, marker_colors=colors, hole=0)])
     fig.update_layout(
-        title="Évaluation utilisateurs (Intentions : reponse_agent_satisfaisante / non_satisfaisante)",
-        xaxis_title="Type",
-        yaxis_title="Nombre",
+        title="Évaluation utilisateurs (Intentions : reponse_agent_satisfaisante / non_satisfaisante / sans avis)",
         template="plotly_dark",
-        showlegend=False
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
     )
     return fig
 
 
 def graph_yelda_evaluation(evaluation_counts):
-    """Graphique en barres : répartition Satisfait / Insatisfait / À revoir (conversations évaluées uniquement)."""
+    """Graphique camembert : répartition Satisfait / Insatisfait / À revoir (conversations évaluées uniquement)."""
     if not evaluation_counts or sum(evaluation_counts.values()) == 0:
         fig = go.Figure()
         fig.add_annotation(text="Aucune donnée d'évaluation", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
@@ -2840,13 +2839,12 @@ def graph_yelda_evaluation(evaluation_counts):
     labels = list(evaluation_counts.keys())
     values = list(evaluation_counts.values())
     colors = ['#2ecc71', '#e74c3c', '#f39c12']  # vert, rouge, orange
-    fig = go.Figure(data=[go.Bar(x=labels, y=values, marker_color=colors)])
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, marker_colors=colors, hole=0)])
     fig.update_layout(
         title="Évaluation des conversations Yelda (fse.stellair.fr) — conversations évaluées uniquement",
-        xaxis_title="Type d'évaluation",
-        yaxis_title="Nombre",
         template="plotly_dark",
-        showlegend=False
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
     )
     return fig
 

@@ -533,16 +533,18 @@ elif authentification_status:
                         col5.metric("Taux satisfaction*", f"{taux_satisfaction}%")
                         nb_intent_sat = kpis_yelda.get('intentions_satisfaisant', 0)
                         nb_intent_non = kpis_yelda.get('intentions_non_satisfaisant', 0)
+                        nb_intent_sans_avis = kpis_yelda.get('intentions_sans_avis', 0)
                         tot_intent = nb_intent_sat + nb_intent_non
                         taux_intent = round(100 * nb_intent_sat / tot_intent, 1) if tot_intent > 0 else 0
-                        st.markdown("**Évaluation utilisateurs (Intentions)** — reponse_agent_satisfaisante / non_satisfaisante")
-                        col_a, col_b, col_c = st.columns(3)
+                        st.markdown("**Évaluation utilisateurs (Intentions)** — reponse_agent_satisfaisante / non_satisfaisante / sans avis")
+                        col_a, col_b, col_c, col_d = st.columns(4)
                         col_a.metric("👍 Satisfaisant", nb_intent_sat)
                         col_b.metric("👎 Non satisfaisant", nb_intent_non)
-                        col_c.metric("Taux satisfaction utilisateurs", f"{taux_intent}%")
-                        st.caption("*Taux satisfaction = Satisfait / (Satisfait + Insatisfait + À revoir) — Seules les conversations évaluées sont comptabilisées (ouvertures sans question exclues)")
+                        col_c.metric("➖ Sans avis", nb_intent_sans_avis)
+                        col_d.metric("Taux satisfaction utilisateurs*", f"{taux_intent}%")
+                        st.caption("*Taux satisfaction = Satisfaisant / (Satisfaisant + Non satisfaisant) — Sans avis = conversations évaluées sans intention déclarée")
                         st.plotly_chart(graph_yelda_evaluation(kpis_yelda['evaluation_counts']), use_container_width=True)
-                        st.plotly_chart(graph_yelda_evaluation_intentions(nb_intent_sat, nb_intent_non), use_container_width=True)
+                        st.plotly_chart(graph_yelda_evaluation_intentions(nb_intent_sat, nb_intent_non, nb_intent_sans_avis), use_container_width=True)
                         st.plotly_chart(graph_yelda_interactions_tickets_semaine(df_yelda_eval), use_container_width=True)
                         st.plotly_chart(graph_yelda_evolution_scores(df_yelda_eval), use_container_width=True)
                         if kpis_yelda['score_llm_moyen'] > 0:

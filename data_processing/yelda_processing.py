@@ -94,6 +94,7 @@ def compute_yelda_kpis(df_yelda_filtered):
             'evaluation_llm_counts': {},
             'intentions_satisfaisant': 0,
             'intentions_non_satisfaisant': 0,
+            'intentions_sans_avis': 0,
         }
     
     df = df_yelda_filtered.copy()
@@ -138,6 +139,9 @@ def compute_yelda_kpis(df_yelda_filtered):
         intent_non_satisfaisant = has_non.sum()
         intent_satisfaisant = has_sat.sum()
 
+    # Sans avis : conversations évaluées sans reponse_agent_satisfaisante ni non_satisfaisante
+    intent_sans_avis = nb_interactions - intent_satisfaisant - intent_non_satisfaisant
+
     return {
         'nb_interactions': nb_interactions,
         'nb_tickets_crees': int(nb_tickets_crees),
@@ -146,6 +150,7 @@ def compute_yelda_kpis(df_yelda_filtered):
         'evaluation_llm_counts': evaluation_llm_counts,
         'intentions_satisfaisant': int(intent_satisfaisant),
         'intentions_non_satisfaisant': int(intent_non_satisfaisant),
+        'intentions_sans_avis': max(0, int(intent_sans_avis)),
     }
 
 
