@@ -41,6 +41,7 @@ wheels/
 !data/**/*.xlsx
 !data/**/*.csv
 !data/**/*.parquet
+!data/**/*.parquetx
 
 # Exclure les caches et fichiers générés dans data/
 data/**/Cache/

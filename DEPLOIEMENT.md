@@ -51,15 +51,24 @@ git push -u origin main
 
 ### Variables d'environnement (Railway)
 
-Dans **Variables** du projet, ajoutez :
+**Sur Railway, les identifiants passent par les variables d'environnement** (pas par des secrets TOML). Dans **Variables** du projet ou du service, ajoutez :
 
-| Variable | Description | Exemple |
-|----------|-------------|---------|
-| `ADMIN_USERNAME` | Identifiant de connexion | `admin` |
-| `ADMIN_PASSWORD` | Mot de passe (en clair) | `VotreMotDePasse123!` |
-| `ADMIN_NAME` | Nom affiché | `Administrateur` |
-| `COOKIE_KEY` | Clé pour les cookies (aléatoire) | Générer avec `openssl rand -hex 32` |
-| `ANTHROPIC_API_KEY` | (Optionnel) Clé pour l'Analyste IA | `sk-ant-...` |
+| Variable | Obligatoire | Description |
+|----------|-------------|-------------|
+| `ADMIN_USERNAME` | ✅ | Identifiant du 1er utilisateur |
+| `ADMIN_PASSWORD` | ✅ | Mot de passe du 1er utilisateur |
+| `COOKIE_KEY` | ✅ | Clé secrète pour les sessions |
+| `ADMIN_NAME` | Optionnel | Nom affiché du 1er |
+| `ADMIN_USERNAME_2` | Optionnel | Identifiant du 2e utilisateur |
+| `ADMIN_PASSWORD_2` | Optionnel | Mot de passe du 2e |
+| `ADMIN_NAME_2` | Optionnel | Nom affiché du 2e |
+| `ADMIN_USERS` | Optionnel | Format : `user:pass:nom;user2:pass2:nom2` |
+| `ANTHROPIC_API_KEY` | Optionnel | Clé pour l'Analyste IA |
+
+**Générer COOKIE_KEY :**
+```bash
+openssl rand -hex 32
+```
 
 ### Volume persistant (données)
 
@@ -108,6 +117,7 @@ models/
 
 ## Dépannage
 
+- **Identifiants refusés sur Railway** : Vérifiez que `ADMIN_USERNAME`, `ADMIN_PASSWORD` et `COOKIE_KEY` sont bien définis dans **Variables** (Project ou Service). Utilisez le même identifiant qu'en local (ex. `cbri`) et le même mot de passe. Redéployez après toute modification des variables.
 - **Erreur au démarrage** : Vérifiez que `ADMIN_PASSWORD` et `COOKIE_KEY` sont définis
 - **Pas de données** : Créez les dossiers et uploadez au moins un fichier Excel par source
 - **Port** : Railway et Render définissent `$PORT` automatiquement

@@ -35,7 +35,15 @@ ENABLE_VECTORIZATION = True
 ENABLE_PARALLEL_PROCESSING = False
 
 # Authentification : hashed_pw.pkl ou variables d'environnement
-COOKIE_KEY = os.getenv('COOKIE_KEY', 'Changez-moi-en-production')
+def _strip_env_quotes(s):
+    if s and isinstance(s, str):
+        s = s.strip()
+        if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
+            return s[1:-1]
+    return s or ''
+
+_cookie_raw = os.getenv('COOKIE_KEY', 'Changez-moi-en-production')
+COOKIE_KEY = _strip_env_quotes(_cookie_raw) if _cookie_raw else 'Changez-moi-en-production'
 
 try:
     file_path = Path(__file__).parent / 'hashed_pw.pkl'
@@ -56,25 +64,84 @@ try:
         }
     }
 except FileNotFoundError:
-    # Mode déploiement : créer un utilisateur admin depuis les variables d'environnement
+    # Mode déploiement : Railway/Render (os.getenv) ou Streamlit Cloud (st.secrets)
     import bcrypt
     def _hash_password(pwd: str) -> str:
         return bcrypt.hashpw(pwd.encode(), bcrypt.gensalt()).decode()
 
-    admin_username = os.getenv('ADMIN_USERNAME', 'admin')
-    admin_password = os.getenv('ADMIN_PASSWORD', '')
-    admin_name = os.getenv('ADMIN_NAME', 'Administrateur')
+    def _is_bcrypt_hash(s: str) -> bool:
+        import re
+        return bool(re.match(r'^\$2[aby]\$\d+\$.{53}$', str(s)))
 
-    if admin_password:
-        hashed = _hash_password(admin_password)
-        CREDENTIALS = {
-            'usernames': {admin_username: {'name': admin_name, 'password': hashed}}
-        }
-    else:
-        # Fallback minimal si aucune config (éviter crash au démarrage)
-        CREDENTIALS = {
-            'usernames': {'admin': {'name': 'Admin', 'password': _hash_password('admin')}}
-        }
+    CREDENTIALS = None
+
+    # 1. Essayer Streamlit secrets (format: [users.cbri] name="...", password="..."
+    try:
+        import streamlit as st
+        users_sec = getattr(st.secrets, 'users', None) or st.secrets.get('users', None) if hasattr(st, 'secrets') else None
+        if users_sec:
+            usernames = {}
+            for username in users_sec:
+                data = users_sec[username]
+                name = data.get('name', username) if hasattr(data, 'get') else getattr(data, 'name', username)
+                pwd = data.get('password', '') if hasattr(data, 'get') else getattr(data, 'password', '')
+                if pwd:
+                    hashed = pwd if _is_bcrypt_hash(str(pwd)) else _hash_password(str(pwd))
+                    usernames[str(username)] = {'name': str(name), 'password': hashed}
+            if usernames:
+                CREDENTIALS = {'usernames': usernames}
+    except Exception:
+        pass
+
+    # 2. Sinon variables d'environnement ou secrets Streamlit ADMIN_*
+    if CREDENTIALS is None:
+        def _secret(key, default=''):
+            try:
+                import streamlit as _st
+                if hasattr(_st, 'secrets') and _st.secrets:
+                    v = getattr(_st.secrets, key, None)
+                    return _strip_env_quotes(str(v)) if v else default
+            except Exception:
+                pass
+            return default
+
+        def _env(key, default=''):
+            v = os.getenv(key)
+            return _strip_env_quotes(str(v)) if v else default
+
+        usernames = {}
+
+        # 1. Toujours d'abord ADMIN_USERNAME + ADMIN_PASSWORD (le plus fiable sur Railway)
+        admin_username = _env('ADMIN_USERNAME') or _secret('ADMIN_USERNAME') or ''
+        admin_password = _env('ADMIN_PASSWORD') or _secret('ADMIN_PASSWORD') or ''
+        admin_name = _env('ADMIN_NAME') or _secret('ADMIN_NAME') or 'Administrateur'
+        if admin_username and admin_password:
+            usernames[admin_username] = {'name': admin_name or admin_username, 'password': _hash_password(admin_password)}
+
+        # 2. ADMIN_USERNAME_2 + ADMIN_PASSWORD_2 pour un 2e utilisateur
+        admin_username_2 = _env('ADMIN_USERNAME_2') or _secret('ADMIN_USERNAME_2') or ''
+        admin_password_2 = _env('ADMIN_PASSWORD_2') or _secret('ADMIN_PASSWORD_2') or ''
+        admin_name_2 = _env('ADMIN_NAME_2') or _secret('ADMIN_NAME_2') or admin_username_2
+        if admin_username_2 and admin_password_2:
+            usernames[admin_username_2] = {'name': admin_name_2 or admin_username_2, 'password': _hash_password(admin_password_2)}
+
+        # 3. ADMIN_USERS (format user:pass:nom;user2:pass2:nom2) - ajoute des utilisateurs
+        admin_users_raw = _env('ADMIN_USERS') or _secret('ADMIN_USERS') or ''
+        for part in admin_users_raw.replace(',', ';').split(';'):
+            part = part.strip()
+            if not part:
+                continue
+            elts = part.split(':', 2)
+            if len(elts) >= 2 and elts[0] and elts[1]:
+                u, p = elts[0].strip(), elts[1].strip()
+                n = elts[2].strip() if len(elts) > 2 else u
+                if u and p:
+                    usernames[u] = {'name': n or u, 'password': _hash_password(p)}
+
+        if usernames:
+            CREDENTIALS = {'usernames': usernames}
+        else:
+            CREDENTIALS = {'usernames': {'admin': {'name': 'Admin', 'password': _hash_password('admin')}}}
 
 # MCP Analyst
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', None)

@@ -1,5 +1,6 @@
 import os
-if not os.path.exists('config.py') and os.path.exists('config.example.py'):
+# En déploiement (sans hashed_pw.pkl), toujours utiliser config.example pour prendre les secrets à jour
+if not os.path.exists('hashed_pw.pkl') and os.path.exists('config.example.py'):
     import shutil
     shutil.copy('config.example.py', 'config.py')
 
