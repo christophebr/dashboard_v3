@@ -57,20 +57,23 @@ try:
     }
 except FileNotFoundError:
     # Mode déploiement : créer un utilisateur admin depuis les variables d'environnement
-    import streamlit_authenticator as stauth
+    import bcrypt
+    def _hash_password(pwd: str) -> str:
+        return bcrypt.hashpw(pwd.encode(), bcrypt.gensalt()).decode()
+
     admin_username = os.getenv('ADMIN_USERNAME', 'admin')
     admin_password = os.getenv('ADMIN_PASSWORD', '')
     admin_name = os.getenv('ADMIN_NAME', 'Administrateur')
-    
+
     if admin_password:
-        hashed = stauth.Hasher.hash(admin_password)
+        hashed = _hash_password(admin_password)
         CREDENTIALS = {
             'usernames': {admin_username: {'name': admin_name, 'password': hashed}}
         }
     else:
         # Fallback minimal si aucune config (éviter crash au démarrage)
         CREDENTIALS = {
-            'usernames': {'admin': {'name': 'Admin', 'password': stauth.Hasher.hash('admin')}}
+            'usernames': {'admin': {'name': 'Admin', 'password': _hash_password('admin')}}
         }
 
 # MCP Analyst
