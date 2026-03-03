@@ -5,6 +5,14 @@ if not os.path.exists('hashed_pw.pkl') and os.path.exists('config.example.py'):
     shutil.copy('config.example.py', 'config.py')
 
 import streamlit as st
+
+# set_page_config DOIT être la première commande Streamlit
+st.set_page_config(
+    page_title=":bar_chart: Dashboard support",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
 from datetime import datetime, date, timedelta
 from data_processing.aircall_processing import process_aircall_data, def_df_support, agents_all, line_tous, agents_support, line_support, line_armatis, agents_armatis, load_aircall_data
 #from data_processing.aircall_processing import get_df_support
@@ -145,12 +153,6 @@ def render_powerpoint_download_button(fig, title, periode, file_name, button_key
             key=f"dl_{button_key}"
         )
 
-
-st.set_page_config(
-    page_title=":bar_chart: Dashboard support",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
 
 # Authentification de l'utilisateur
 authenticator = stauth.Authenticate(
