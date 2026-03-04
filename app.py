@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 
-# S'assurer que le dossier du projet est bien dans sys.path pour les imports (Railway / environnements déployés)
+# S'assurer que le dossier du projet est bien dans sys.path (Railway / déploiement)
 PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -22,6 +22,11 @@ st.set_page_config(
 )
 
 from datetime import datetime, date, timedelta
+
+# Pré-charger les packages (évite KeyError 'data_processing' sur Railway/Streamlit rerun)
+import data_processing as _dp  # noqa: F401
+import utils as _u  # noqa: F401
+
 from data_processing.aircall_processing import process_aircall_data, def_df_support, agents_all, line_tous, agents_support, line_support, line_armatis, agents_armatis, load_aircall_data
 #from data_processing.aircall_processing import get_df_support
 from data_processing.hubspot_processing import process_hubspot_data, load_hubspot_data
