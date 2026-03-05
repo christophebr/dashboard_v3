@@ -2993,7 +2993,7 @@ def graph_yelda_evolution_scores(df_yelda):
         xaxis=dict(tickangle=-45),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
-    fig.update_yaxes(title_text="Score LLM moyen", secondary_y=False)
+    fig.update_yaxes(title_text="Score LLM moyen", range=[1, 5], secondary_y=False)
     fig.update_yaxes(title_text="Taux satisfaction (%)", secondary_y=True)
     return fig
 

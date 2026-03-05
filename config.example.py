@@ -21,6 +21,10 @@ HUBSPOT_TICKET_DATA_PATH = os.getenv('HUBSPOT_TICKET_PATH', 'data/Affid/Hubspot/
 HUBSPOT_AGENT_DATA_PATH = os.getenv('HUBSPOT_AGENT_PATH', 'data/Affid/Hubspot/agent')
 EVALUATION_DATA_PATH = os.getenv('EVALUATION_DATA_PATH', 'data/Affid/Evaluation/support_notes_filtered.xlsx')
 YELDA_DATA_PATH = os.getenv('YELDA_DATA_PATH', 'data/Affid/yelda/yelda.xlsx')
+ANALYSE_APPELS_TICKETS_PATH = os.getenv(
+    'ANALYSE_APPELS_TICKETS_PATH',
+    'data/Affid/analyse_appels_tickets/dashboard_support_stellair.xlsx'
+)
 
 MODEL_PATH = 'models/random_forest_model.pkl'
 TFIDF_PATH = 'models/tfidf_vectorizer.pkl'

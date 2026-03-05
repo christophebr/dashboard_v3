@@ -34,7 +34,7 @@ from data_processing.kpi_generation import generate_kpis, filtrer_par_periode, c
 from utils.streamlit_helpers import load_data
 from utils.powerpoint_helpers import create_powerpoint, create_powerpoint_agents, create_powerpoint_stellair_minimal, create_powerpoint_agents_report
 import config
-from config import CREDENTIALS, AIRCALL_DATA_PATH_V1, AIRCALL_DATA_PATH_V2, AIRCALL_DATA_PATH_V3, HUBSPOT_TICKET_DATA_PATH, EVALUATION_DATA_PATH, YELDA_DATA_PATH
+from config import CREDENTIALS, AIRCALL_DATA_PATH_V1, AIRCALL_DATA_PATH_V2, AIRCALL_DATA_PATH_V3, HUBSPOT_TICKET_DATA_PATH, EVALUATION_DATA_PATH, YELDA_DATA_PATH, ANALYSE_APPELS_TICKETS_PATH
 import streamlit_authenticator as stauth
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -566,7 +566,69 @@ elif authentification_status:
                         st.info("📁 Fichier Yelda non trouvé. Placez `yelda.xlsx` dans `data/Affid/yelda/` pour afficher les indicateurs.")
                 except Exception as e:
                     st.warning(f"Indicateurs Yelda non disponibles : {e}")
-                
+
+                # ----------- ANALYSE QUALITATIVE (échantillon 30% appels + tickets) -----------
+                st.markdown("## 📋 Analyse qualitative (échantillon 30%)")
+                try:
+                    from data_processing.analyse_appels_tickets_processing import load_analyse_appels_tickets
+                    import plotly.express as px
+                    data_analyse = load_analyse_appels_tickets(ANALYSE_APPELS_TICKETS_PATH)
+                    if data_analyse:
+                        sg = data_analyse.get('synthese_globale') or {}
+                        sm = data_analyse.get('synthese_dernier_mois') or {}
+                        sps = data_analyse.get('synthese_par_secteur') or []
+                        st.caption("Données issues de l'analyse d'un échantillon (30%) des appels et tickets sur la période.")
+
+                        # Métriques globales
+                        st.markdown("### Synthèse globale (toute la période)")
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("Appels analysés", sg.get('appels_analyses', '-'))
+                        c2.metric("Tickets analysés", sg.get('tickets_analyses', '-'))
+                        c3.metric("Total analysé", sg.get('total', '-'))
+
+                        # Répartition par secteur (globale) - graphique
+                        rep_glob = [r for r in sg.get('repartition_secteurs', []) if r.get('nb') is not None]
+                        if rep_glob:
+                            df_rep = pd.DataFrame(rep_glob)
+                            fig_rep_glob = px.bar(df_rep, x='secteur', y='nb', color='pct',
+                                color_continuous_scale='Blues', text='nb',
+                                title="Répartition par secteur (période globale)")
+                            fig_rep_glob.update_layout(xaxis_tickangle=-45, showlegend=False)
+                            fig_rep_glob.update_traces(textposition='outside')
+                            st.plotly_chart(fig_rep_glob, use_container_width=True)
+
+                        # Synthèse dernier mois
+                        st.markdown("### Synthèse dernier mois (30 jours)")
+                        d1, d2, d3 = st.columns(3)
+                        d1.metric("Appels analysés", sm.get('appels_analyses', '-'))
+                        d2.metric("Tickets analysés", sm.get('tickets_analyses', '-'))
+                        d3.metric("Total analysé", sm.get('total', '-'))
+
+                        rep_mois = [r for r in sm.get('repartition_secteurs', []) if r.get('nb') is not None]
+                        if rep_mois:
+                            df_mois = pd.DataFrame(rep_mois)
+                            fig_rep_mois = px.bar(df_mois, x='secteur', y='nb', color='pct',
+                                color_continuous_scale='Teal', text='nb',
+                                title="Répartition par secteur (dernier mois)")
+                            fig_rep_mois.update_layout(xaxis_tickangle=-45, showlegend=False)
+                            fig_rep_mois.update_traces(textposition='outside')
+                            st.plotly_chart(fig_rep_mois, use_container_width=True)
+
+                        # Synthèses textuelles par catégorie (dernier mois)
+                        st.markdown("### Synthèses textuelles par catégorie (dernier mois)")
+                        for item in sps:
+                            secteur = item.get('secteur', '')
+                            nb = item.get('nb')
+                            pct = item.get('pct')
+                            syn = item.get('synthese_textuelle', '')
+                            if secteur and syn:
+                                with st.expander(f"**{secteur}**" + (f" — {nb} ({pct}%)" if nb is not None and pct is not None else "")):
+                                    st.markdown(syn)
+                    else:
+                        st.info("📁 Fichier d'analyse non trouvé. Placez `dashboard_support_stellair.xlsx` dans `data/Affid/analyse_appels_tickets/` pour afficher l'analyse qualitative.")
+                except Exception as e:
+                    st.warning(f"Analyse qualitative non disponible : {e}")
+
                 # Nouveau graphique de répartition des groupes d'agents
                 st.plotly_chart(graph_repartition_groupes_stellair(df_support), use_container_width=True)
                 col1, col2 = st.columns([3, 1])
