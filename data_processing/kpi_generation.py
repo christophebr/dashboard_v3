@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 import numpy as np
 from plotly.subplots import make_subplots
@@ -8,10 +9,24 @@ import warnings
 import os
 warnings.filterwarnings('ignore')
 
-def generate_kpis(df_support, df_tickets, agents, partenaire=None, partenaires=None):
+
+def _semaine_to_week_end(week_str):
+    """
+    Convertit une chaîne 'S2026-04' en date de fin de semaine (dimanche).
+    La colonne Semaine est créée avec strftime('S%Y-%V') = année + semaine ISO.
+    Utilise le format ISO %G-W%%V-%u pour éviter les incohérences de %W (semaine calendaire).
+    """
+    year = int(week_str[1:5])
+    week_num = int(week_str[6:])
+    # Dimanche (7) = dernier jour de la semaine ISO
+    return pd.Timestamp(pd.to_datetime(f'{year}-W{week_num:02d}-7', format='%G-W%V-%u'))
+
+
+def generate_kpis(df_support, df_tickets, agents, partenaire=None, partenaires=None, skip_charge_affid_stellair=False):
     """
     Génère les KPIs pour un ou plusieurs agents.
     Retourne un dictionnaire avec les métriques, y compris les graphes, SLA, etc.
+    skip_charge_affid_stellair: si True, évite le calcul (utile quand df_support est Stellair-only, le graph sera calculé à part avec les données complètes).
     """
     # Sauvegarde de l'entrée pour condition ultérieure
     agent_original = agents
@@ -58,7 +73,10 @@ def generate_kpis(df_support, df_tickets, agents, partenaire=None, partenaires=N
     taux_reponse, mean_difference, df_taux_reponse = calcul_taux_reponse(df_support)
     com_jour, temps_moy_com, nb_appels_jour, nb_appel, nb_appels_jour_entrants, nb_appels_jour_sortants, ratio_entrants, ratio_sortants = kpi_agent(selected_agents, df_support)
     Taux_de_service, Entrant, Numero_unique, temps_moy_appel, Nombre_appel_jour_agent = metrics_support(df_support, selected_agents)
-    charge_affid_stellair_1, charge_affid_stellair_2, essai = graph_charge_affid_stellair(df_support)
+    if skip_charge_affid_stellair:
+        charge_affid_stellair_1, charge_affid_stellair_2, essai = None, None, None
+    else:
+        charge_affid_stellair_1, charge_affid_stellair_2, essai = graph_charge_affid_stellair(df_support)
 
     # --- KPIs TICKETS ---
     # Filtrer les tickets pour l'agent
@@ -2078,8 +2096,7 @@ def graph_tickets_n2_cumulatif(df_tickets, pipeline_filter=None):
     weekly_data = []
 
     for week in all_weeks:
-        year, week_num = int(week[1:5]), int(week[6:])
-        week_end_date = pd.to_datetime(f'{year}-W{week_num}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6)
+        week_end_date = _semaine_to_week_end(week)
 
         created_so_far = df_n2_summary[df_n2_summary['Date entrée N2'] <= week_end_date]
         closed_so_far = created_so_far[
@@ -2128,7 +2145,7 @@ def graph_tickets_n2_cumulatif(df_tickets, pipeline_filter=None):
     fig.update_yaxes(title_text="Total tickets (cumulatif)", secondary_y=False)
     fig.update_yaxes(title_text="Stock de tickets ouverts", secondary_y=True)
     
-    last_week_end = pd.to_datetime(f'{all_weeks[-1][1:5]}-W{all_weeks[-1][6:]}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6)
+    last_week_end = _semaine_to_week_end(all_weeks[-1])
     tickets_ouverts_fin_periode = df_n2_summary[
         (df_n2_summary['Date entrée N2'] <= last_week_end) & 
         ((df_n2_summary['Temps de fermeture'] == pd.Timedelta(seconds=0)) | (df_n2_summary['Date de fermeture'] > last_week_end))
@@ -2188,9 +2205,7 @@ def graph_tickets_ouverts_pierre_goupillon(df_tickets):
     weekly_open_counts = []
 
     for week in all_weeks:
-        # Déterminer la date de fin de la semaine
-        year, week_num = int(week[1:5]), int(week[6:])
-        week_end_date = pd.to_datetime(f'{year}-W{week_num}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6)
+        week_end_date = _semaine_to_week_end(week)
         
         # 1. Sélectionner les tickets créés avant la fin de cette semaine
         tickets_created_so_far = df_pierre_summary[df_pierre_summary['Date de création'] <= week_end_date]
@@ -2320,10 +2335,7 @@ def graph_tickets_n1_cumulatif(df_tickets, agent_filter=None, weeks_to_display=N
     weekly_data = []
 
     for week in all_weeks_full_n1:
-        # Extraire l'année et le numéro de semaine pour calculer la date de fin de semaine
-        year, week_num = int(week[1:5]), int(week[6:])
-        # Le + '6' pour obtenir le dimanche (fin de semaine)
-        week_end_date = pd.to_datetime(f'{year}-W{week_num}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6)
+        week_end_date = _semaine_to_week_end(week)
 
         # Tickets créés jusqu'à la fin de cette semaine
         created_so_far = df_n1[df_n1['Date de création'] <= week_end_date]
@@ -2394,7 +2406,7 @@ def graph_tickets_n1_cumulatif(df_tickets, agent_filter=None, weeks_to_display=N
     fig.update_yaxes(title_text="Stock de tickets ouverts", secondary_y=True)
     
     # La notion de "tickets en cours" à télécharger : créés avant fin de période et non fermés (Statut) ou fermés après
-    last_week_end = pd.to_datetime(f'{all_weeks_full_n1[-1][1:5]}-W{all_weeks_full_n1[-1][6:]}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6)
+    last_week_end = _semaine_to_week_end(all_weeks_full_n1[-1])
     tickets_ouverts_fin_periode = df_n1[
         (df_n1['Date de création'] <= last_week_end) & 
         (~df_n1['_est_ferme'] | df_n1['_date_fermeture_effective'].isna() | (df_n1['_date_fermeture_effective'] > last_week_end))
@@ -2430,8 +2442,7 @@ def compute_n1_stock_debug(df_tickets):
 
     weekly_data = []
     for week in all_weeks_full:
-        year, week_num = int(week[1:5]), int(week[6:])
-        week_end_date = pd.to_datetime(f'{year}-W{week_num}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6)
+        week_end_date = _semaine_to_week_end(week)
 
         created_so_far = df[df['Date de création'] <= week_end_date]
         closed_so_far = created_so_far[(created_so_far['Temps de fermeture'] > pd.Timedelta(seconds=0)) & (created_so_far['Date de fermeture'] <= week_end_date)]
@@ -2470,8 +2481,7 @@ def compute_n2_stock_debug(df_tickets):
 
     weekly_data = []
     for week in all_weeks_full:
-        year, week_num = int(week[1:5]), int(week[6:])
-        week_end_date = pd.to_datetime(f'{year}-W{week_num}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6)
+        week_end_date = _semaine_to_week_end(week)
 
         created_so_far = df[df['Date de création'] <= week_end_date]
         closed_so_far = created_so_far[(created_so_far['Temps de fermeture'] > pd.Timedelta(seconds=0)) & (created_so_far['Date de fermeture'] <= week_end_date)]
@@ -2604,9 +2614,7 @@ def graph_tickets_n1_par_semaine(df_tickets, selected_agent=None):
 
     # Calculer les tickets ouverts pour chaque semaine
     for week in ordre_semaines:
-        # Déterminer la date de fin de la semaine
-        year, week_num = int(week[1:5]), int(week[6:])
-        week_end_date = pd.to_datetime(f'{year}-W{week_num}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6)
+        week_end_date = _semaine_to_week_end(week)
         
         # 1. Sélectionner les tickets créés avant la fin de cette semaine (tous agents N1)
         tickets_created_so_far = df_n1_summary[df_n1_summary['Date de création'] <= week_end_date]
@@ -2757,8 +2765,7 @@ def graph_tickets_n1_par_semaine_stellair(df_tickets, agent_filter=None, weeks_t
 
     weekly_open_counts = []
     for week in ordre_semaines:
-        year, week_num = int(week[1:5]), int(week[6:])
-        week_end_date = pd.Timestamp(pd.to_datetime(f'{year}-W{week_num}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6))
+        week_end_date = _semaine_to_week_end(week)
         created_so_far = df_summary[df_summary['Date de création'] <= week_end_date]
         still_open = created_so_far[
             (~created_so_far['_est_ferme']) |
@@ -2793,8 +2800,7 @@ def graph_tickets_n1_par_semaine_stellair(df_tickets, agent_filter=None, weeks_t
     if not ordre_semaines:
         return fig, agents_disponibles, pd.DataFrame()
     last_week = ordre_semaines[-1]
-    year, week_num = int(last_week[1:5]), int(last_week[6:])
-    last_week_end = pd.Timestamp(pd.to_datetime(f'{year}-W{week_num}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6))
+    last_week_end = _semaine_to_week_end(last_week)
     open_at_end = df_summary[
         (df_summary['Date de création'] <= last_week_end) &
         (
@@ -2996,6 +3002,285 @@ def graph_yelda_evolution_scores(df_yelda):
     fig.update_yaxes(title_text="Score LLM moyen", range=[1, 5], secondary_y=False)
     fig.update_yaxes(title_text="Taux satisfaction (%)", secondary_y=True)
     return fig
+
+
+# Pipelines Stellair pour l'analyse de concentration
+PIPELINES_STELLAIR = ['SSI', 'Chatbot Yelda']  # Concentration tickets : SSI et Chatbot Yelda uniquement
+DOMAINES_EXCLUS_CONCENTRATION = ['olaqin.fr', 'affid.fr']  # Exclure les contacts internes
+
+
+def compute_concentration_metrics_stellair(df_support, df_tickets):
+    """
+    Calcule les indicateurs de concentration des demandes (appels + tickets) pour Stellair.
+    Répond à la question : les demandes proviennent-elles d'un petit groupe ou sont-elles réparties ?
+
+    Parameters:
+    -----------
+    df_support : DataFrame des appels (filtré Stellair, avec 'Number', 'direction')
+    df_tickets : DataFrame des tickets (filtré Pipeline SSI/SSIA/SPSA/Yelda, avec 'Associated Contact IDs' ou 'Associated Contact')
+
+    Returns:
+    --------
+    dict avec clés :
+        - appels : {nb_contacts, nb_demandes, pct_1_demande, pct_5plus, top10_pct_demandes, top20_pct_demandes, pareto_data}
+        - tickets : idem
+        - combine : récap des deux canaux
+    """
+    result = {'appels': None, 'tickets': None}
+
+    # --- Appels : inbound répondus OU outbound > 60 s ---
+    if df_support is not None and not df_support.empty:
+        inbound_repondu = (df_support['direction'] == 'inbound') & (df_support['LastState'] == 'yes')
+        outbound_long = (df_support['direction'] == 'outbound') & (df_support['InCallDuration'].fillna(0) > 60)
+        df_app = df_support[inbound_repondu | outbound_long].copy()
+        if 'Number' not in df_app.columns and 'FromNumber' in df_app.columns:
+            df_app['Number'] = df_app['FromNumber']
+        if not df_app.empty and 'Number' in df_app.columns:
+            by_num = df_app.groupby('Number').size().reset_index(name='nb')
+            by_num = by_num[by_num['Number'].notna() & (by_num['Number'].astype(str).str.strip() != '')]
+            if not by_num.empty:
+                result['appels'] = _compute_concentration_from_counts(by_num['nb'])
+
+    # --- Tickets : contacts (Associated Contact IDs en priorité) ---
+    if df_tickets is not None and not df_tickets.empty:
+        df_t = df_tickets[df_tickets['Pipeline'].isin(PIPELINES_STELLAIR)].copy()
+        col_contact = 'Associated Contact' if 'Associated Contact' in df_t.columns else None
+        if col_contact is not None:
+            contact_str = df_t[col_contact].fillna('').astype(str).str.lower()
+            mask_exclu = contact_str.str.contains('|'.join(re.escape(d) for d in DOMAINES_EXCLUS_CONCENTRATION), regex=True, na=False)
+            df_t = df_t[~mask_exclu]
+        col_id = 'Associated Contact IDs' if 'Associated Contact IDs' in df_t.columns else 'Associated Contact'
+        if col_id in df_t.columns:
+            df_t['_contact_id'] = df_t[col_id].astype(str).str.strip()
+            df_t.loc[df_t['_contact_id'] == 'nan', '_contact_id'] = ''
+            df_t = df_t[df_t['_contact_id'] != '']
+            if not df_t.empty:
+                by_contact = df_t.groupby('_contact_id').size().reset_index(name='nb')
+                result['tickets'] = _compute_concentration_from_counts(by_contact['nb'])
+
+    return result
+
+
+def _compute_concentration_from_counts(counts_series):
+    """Calcule les métriques de concentration à partir d'une série de fréquences (nb de demandes par contact)."""
+    counts = counts_series.dropna()
+    if counts.empty or counts.sum() == 0:
+        return None
+    counts = counts.sort_values(ascending=False).reset_index(drop=True)
+    n_contacts = len(counts)
+    n_demandes = int(counts.sum())
+    cumul = counts.cumsum()
+    pct_cumul_demandes = 100 * cumul / n_demandes
+
+    # % de contacts avec 1 seule demande
+    pct_1 = 100 * (counts == 1).sum() / n_contacts if n_contacts > 0 else 0
+    # % de contacts avec 5+ demandes
+    pct_5plus = 100 * (counts >= 5).sum() / n_contacts if n_contacts > 0 else 0
+
+    # Top 10% / 20% des contacts = combien % des demandes ?
+    idx_10 = max(1, int(0.1 * n_contacts)) - 1
+    idx_20 = max(1, int(0.2 * n_contacts)) - 1
+    top10_pct = float(pct_cumul_demandes.iloc[idx_10]) if idx_10 < len(pct_cumul_demandes) else 0
+    top20_pct = float(pct_cumul_demandes.iloc[idx_20]) if idx_20 < len(pct_cumul_demandes) else 0
+
+    # Données pour courbe Pareto : cumul % contacts vs cumul % demandes
+    pct_contacts_cumul = 100 * np.arange(1, n_contacts + 1) / n_contacts
+    pareto_data = pd.DataFrame({
+        'pct_contacts': pct_contacts_cumul,
+        'pct_demandes': pct_cumul_demandes.values
+    })
+
+    return {
+        'nb_contacts': n_contacts,
+        'nb_demandes': n_demandes,
+        'pct_1_demande': round(pct_1, 1),
+        'pct_5plus_demandes': round(pct_5plus, 1),
+        'top10_pct_demandes': round(top10_pct, 1),
+        'top20_pct_demandes': round(top20_pct, 1),
+        'pareto_data': pareto_data,
+        'distribution': counts.value_counts().sort_index()
+    }
+
+
+def graph_concentration_stellair(metrics):
+    """
+    Graphiques d'analyse de concentration Stellair :
+    1. Courbes de Pareto (appels et tickets) - % contacts vs % demandes
+    2. Histogramme de distribution (nb de contacts par nombre de demandes)
+    """
+    if not metrics or (metrics.get('appels') is None and metrics.get('tickets') is None):
+        fig = go.Figure()
+        fig.add_annotation(text="Aucune donnée pour l'analyse de concentration", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        fig.update_layout(template="plotly_dark")
+        return fig
+
+    from plotly.subplots import make_subplots
+    subplot_titles = []
+    if metrics.get('appels'):
+        subplot_titles.append("Pareto Appels (numéros uniques)")
+    if metrics.get('tickets'):
+        subplot_titles.append("Pareto Tickets (contacts)")
+    if not subplot_titles:
+        subplot_titles = ["Analyse de concentration"]
+    n_plots = len(subplot_titles)
+    fig = make_subplots(rows=n_plots, cols=1, subplot_titles=subplot_titles, vertical_spacing=0.12)
+
+    row = 1
+    if metrics.get('appels') and metrics['appels'].get('pareto_data') is not None:
+        pd_app = metrics['appels']['pareto_data']
+        fig.add_trace(
+            go.Scatter(x=pd_app['pct_contacts'], y=pd_app['pct_demandes'], name="Appels",
+                       mode='lines', line=dict(color='#3498db', width=2)),
+            row=row, col=1
+        )
+        fig.add_hline(y=80, line_dash="dash", line_color="gray", opacity=0.6, row=row, col=1)
+        fig.add_hline(y=20, line_dash="dot", line_color="gray", opacity=0.4, row=row, col=1)
+        row += 1
+    if metrics.get('tickets') and metrics['tickets'].get('pareto_data') is not None:
+        pd_tick = metrics['tickets']['pareto_data']
+        fig.add_trace(
+            go.Scatter(x=pd_tick['pct_contacts'], y=pd_tick['pct_demandes'], name="Tickets",
+                       mode='lines', line=dict(color='#2ecc71', width=2)),
+            row=row, col=1
+        )
+        fig.add_hline(y=80, line_dash="dash", line_color="gray", opacity=0.6, row=row, col=1)
+        fig.add_hline(y=20, line_dash="dot", line_color="gray", opacity=0.4, row=row, col=1)
+
+    fig.update_layout(
+        title="Concentration des demandes : courbe de Pareto (20% des contacts → ?% des demandes)",
+        template="plotly_dark",
+        height=280 * max(1, n_plots),
+        showlegend=True
+    )
+    fig.update_xaxes(title_text="% des contacts (triés par ordre décroissant de demandes)")
+    fig.update_yaxes(title_text="% cumulé des demandes")
+    return fig
+
+
+def graph_concentration_histogram_stellair(metrics):
+    """Histogramme : répartition des contacts par nombre de demandes (1, 2, 3-4, 5+)."""
+    if not metrics or (metrics.get('appels') is None and metrics.get('tickets') is None):
+        fig = go.Figure()
+        fig.add_annotation(text="Aucune donnée", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        fig.update_layout(template="plotly_dark")
+        return fig
+
+    fig = go.Figure()
+    colors = {'appels': '#3498db', 'tickets': '#2ecc71'}
+    for k, label in [('appels', 'Appels'), ('tickets', 'Tickets')]:
+        m = metrics.get(k)
+        if m is None or m.get('distribution') is None:
+            continue
+        dist = m['distribution']
+        buckets = {'1': 0, '2': 0, '3-4': 0, '5+': 0}
+        for nb, count in dist.items():
+            if nb == 1:
+                buckets['1'] += count
+            elif nb == 2:
+                buckets['2'] += count
+            elif nb in (3, 4):
+                buckets['3-4'] += count
+            else:
+                buckets['5+'] += count
+        x_vals = list(buckets.keys())
+        y_vals = list(buckets.values())
+        fig.add_trace(go.Bar(x=x_vals, y=y_vals, name=label, marker_color=colors[k]))
+    fig.update_layout(
+        title="Répartition des contacts par nombre de demandes",
+        template="plotly_dark",
+        barmode='group',
+        xaxis_title="Nombre de demandes par contact",
+        yaxis_title="Nombre de contacts"
+    )
+    return fig
+
+
+def get_top_clients_stellair(df_support, df_tickets, seuil_min=3, top_n=50):
+    """
+    Identifie les clients qui sollicitent le plus le support (appels et tickets).
+    Retourne les listes avec contexte (catégories, sujets) pour analyser le "pourquoi".
+
+    Parameters:
+    -----------
+    df_support : DataFrame appels Stellair (avec Number, direction)
+    df_tickets : DataFrame tickets (Pipeline SSI/SSIA/SPSA/Yelda, avec Associated Contact, Catégorie, Sujet)
+    seuil_min : nombre minimum de demandes pour figurer (défaut 3)
+    top_n : nombre max de clients à retourner (défaut 50)
+
+    Returns:
+    --------
+    dict avec 'top_appels' et 'top_tickets', chacun un DataFrame
+    """
+    result = {'top_appels': None, 'top_tickets': None}
+
+    # --- Top numéros : inbound répondus OU outbound > 60 s ---
+    if df_support is not None and not df_support.empty:
+        inbound_repondu = (df_support['direction'] == 'inbound') & (df_support['LastState'] == 'yes')
+        outbound_long = (df_support['direction'] == 'outbound') & (df_support['InCallDuration'].fillna(0) > 60)
+        df_app = df_support[inbound_repondu | outbound_long].copy()
+        if 'Number' not in df_app.columns and 'FromNumber' in df_app.columns:
+            df_app['Number'] = df_app['FromNumber']
+        if 'Number' in df_app.columns:
+            by_num = df_app.groupby('Number').size().reset_index(name='nb_appels')
+            by_num = by_num[by_num['Number'].notna() & (by_num['Number'].astype(str).str.strip() != '')]
+            by_num = by_num[by_num['nb_appels'] >= seuil_min].sort_values('nb_appels', ascending=False).head(top_n)
+            if not by_num.empty:
+                total = by_num['nb_appels'].sum()
+                by_num['pct_du_total'] = (100 * by_num['nb_appels'] / total).round(1)
+                by_num = by_num.rename(columns={'Number': 'numero'})
+                result['top_appels'] = by_num
+
+    # --- Top contacts (tickets) avec catégories et sujets ---
+    if df_tickets is not None and not df_tickets.empty:
+        df_t = df_tickets[df_tickets['Pipeline'].isin(PIPELINES_STELLAIR)].copy()
+        if 'Associated Contact' in df_t.columns:
+            contact_str = df_t['Associated Contact'].fillna('').astype(str).str.lower()
+            mask_exclu = contact_str.str.contains('|'.join(re.escape(d) for d in DOMAINES_EXCLUS_CONCENTRATION), regex=True, na=False)
+            df_t = df_t[~mask_exclu]
+        col_id = 'Associated Contact IDs' if 'Associated Contact IDs' in df_t.columns else 'Associated Contact'
+        col_nom = 'Associated Contact' if 'Associated Contact' in df_t.columns else col_id
+        if col_id in df_t.columns:
+            df_t['_contact_id'] = df_t[col_id].astype(str).str.strip()
+            df_t.loc[df_t['_contact_id'].isin(['', 'nan']), '_contact_id'] = None
+            df_t = df_t[df_t['_contact_id'].notna()]
+
+            def _top_values(ser, n=3):
+                vc = ser.dropna().astype(str)
+                vc = vc[vc != 'nan'][vc != '']
+                if vc.empty:
+                    return ''
+                return ', '.join(vc.value_counts().head(n).index.tolist()[:n])
+
+            # D'abord identifier les top contacts (sans apply) pour limiter le travail
+            by_contact = df_t.groupby('_contact_id', observed=True)['Ticket ID'].count().reset_index(name='nb_tickets')
+            by_contact = by_contact[by_contact['nb_tickets'] >= seuil_min].sort_values('nb_tickets', ascending=False).head(top_n)
+            if by_contact.empty:
+                return result
+            top_ids = set(by_contact['_contact_id'].tolist())
+            df_t = df_t[df_t['_contact_id'].isin(top_ids)]  # Réduire le dataset
+
+            if 'Catégorie' in df_t.columns:
+                cat_top = df_t.groupby('_contact_id', observed=True)['Catégorie'].apply(lambda x: _top_values(x, 3)).reset_index()
+                cat_top.columns = ['_contact_id', 'categories_principales']
+                by_contact = by_contact.merge(cat_top, on='_contact_id', how='left')
+            if 'Sujet de la demande' in df_t.columns:
+                sub_top = df_t.groupby('_contact_id', observed=True)['Sujet de la demande'].apply(lambda x: _top_values(x, 3)).reset_index()
+                sub_top.columns = ['_contact_id', 'sujets_recurrents']
+                by_contact = by_contact.merge(sub_top, on='_contact_id', how='left')
+            # Récupérer le nom du contact (premier rencontré par id)
+            if col_nom in df_t.columns and col_nom != col_id:
+                noms = df_t.groupby('_contact_id')[col_nom].first().reset_index()
+                noms.columns = ['_contact_id', 'contact_nom']
+                by_contact = by_contact.merge(noms, on='_contact_id', how='left')
+            else:
+                by_contact['contact_nom'] = by_contact['_contact_id']
+            by_contact = by_contact[by_contact['nb_tickets'] >= seuil_min].sort_values('nb_tickets', ascending=False).head(top_n)
+            if not by_contact.empty:
+                total = by_contact['nb_tickets'].sum()
+                by_contact['pct_du_total'] = (100 * by_contact['nb_tickets'] / total).round(1)
+                result['top_tickets'] = by_contact
+
+    return result
 
 
 def get_n1_agents_list(df_tickets):
@@ -3963,9 +4248,7 @@ def graph_tickets_n2_par_semaine(df_tickets):
         df_pierre_summary['Date de fermeture'] = df_pierre_summary['Date de création'] + df_pierre_summary['Temps de fermeture']
 
     for week in all_weeks_full:
-        # Déterminer la date de fin de la semaine
-        year, week_num = int(week[1:5]), int(week[6:])
-        week_end_date = pd.to_datetime(f'{year}-W{week_num}-0', format='%Y-W%W-%w') + pd.Timedelta(days=6)
+        week_end_date = _semaine_to_week_end(week)
         
         # 1. Sélectionner les tickets créés avant la fin de cette semaine
         tickets_created_so_far = df_n2_summary[df_n2_summary['Date de création'] <= week_end_date]
