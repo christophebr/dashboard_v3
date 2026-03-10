@@ -2815,6 +2815,36 @@ def graph_tickets_n1_par_semaine_stellair(df_tickets, agent_filter=None, weeks_t
 
 
 # --- Graphiques Yelda (chatbot Stellair) ---
+def _filter_yelda_weeks_main_block(weeks_with_counts, gap_threshold=3, min_count=5):
+    """
+    Restreint les semaines au bloc principal (contigu depuis le début).
+    Exclut les semaines isolées (ex: 14, 18, 23...) quand les conversations s'arrêtent à la semaine 12.
+    weeks_with_counts: dict ou Series {semaine_str: count}
+    Retourne: set des semaines à conserver
+    """
+    if weeks_with_counts is None or (hasattr(weeks_with_counts, 'empty') and weeks_with_counts.empty):
+        return set()
+    items = weeks_with_counts.items() if hasattr(weeks_with_counts, 'items') else list(zip(weeks_with_counts.index, weeks_with_counts))
+    if not items:
+        return set()
+    sorted_weeks = sorted(
+        [w for w, c in items if c >= min_count],
+        key=lambda x: (int(x.split('-')[0]), int(x.split('-')[1].replace('S', '')))
+    )
+    if not sorted_weeks:
+        return set()
+    keep = [sorted_weeks[0]]
+    for i in range(1, len(sorted_weeks)):
+        prev_y, prev_w = int(keep[-1].split('-')[0]), int(keep[-1].split('-')[1].replace('S', ''))
+        curr_y, curr_w = int(sorted_weeks[i].split('-')[0]), int(sorted_weeks[i].split('-')[1].replace('S', ''))
+        prev_ord = prev_y * 53 + prev_w
+        curr_ord = curr_y * 53 + curr_w
+        if curr_ord - prev_ord > gap_threshold:
+            break  # coupure : ne pas inclure cette semaine ni les suivantes
+        keep.append(sorted_weeks[i])
+    return set(keep)
+
+
 def graph_yelda_evaluation_intentions(intentions_satisfaisant, intentions_non_satisfaisant, intentions_sans_avis=0):
     """Graphique camembert : répartition utilisateur satisfait / non satisfait / sans avis (Intentions)."""
     if intentions_satisfaisant == 0 and intentions_non_satisfaisant == 0 and intentions_sans_avis == 0:
@@ -2874,7 +2904,9 @@ def graph_yelda_interactions_tickets_semaine(df_yelda):
         interactions=('Semaine', 'count'),
         tickets_crees=('Ticket créé', 'sum')
     ).reset_index()
-    weekly = weekly.sort_values('Semaine')
+    # Restreindre au bloc principal (éviter semaines 14-36 quand les conversations s'arrêtent à la semaine 12)
+    weeks_ok = _filter_yelda_weeks_main_block(weekly.set_index('Semaine')['interactions'], gap_threshold=3, min_count=5)
+    weekly = weekly[weekly['Semaine'].isin(weeks_ok)].sort_values('Semaine')
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
         go.Bar(x=weekly['Semaine'], y=weekly['interactions'], name="Interactions", marker_color='#3498db'),
@@ -2957,6 +2989,10 @@ def graph_yelda_evolution_scores(df_yelda):
             row['taux_satisfaction_utilisateurs'] = 100 * satisfaisant / tot_intentions if tot_intentions > 0 else np.nan
         weekly_list.append(row)
     weekly_data = pd.DataFrame(weekly_list).sort_values('Semaine')
+    # Restreindre au bloc principal (éviter semaines 14-36 quand les conversations s'arrêtent à la semaine 12)
+    counts_by_week = df.groupby('Semaine').size()
+    weeks_ok = _filter_yelda_weeks_main_block(counts_by_week, gap_threshold=3, min_count=5)
+    weekly_data = weekly_data[weekly_data['Semaine'].isin(weeks_ok)].sort_values('Semaine')
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     if score_col and 'score_llm_moyen' in weekly_data.columns and weekly_data['score_llm_moyen'].notna().any():
         fig.add_trace(

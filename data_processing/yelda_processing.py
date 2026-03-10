@@ -51,17 +51,20 @@ def filter_yelda_stellair(df_yelda):
     return df_yelda[mask].copy()
 
 
-def filter_yelda_evaluated(df_yelda):
+def filter_yelda_evaluated(df_yelda, use_llm=True):
     """
     Ne garde que les conversations évaluées (Satisfait, Insatisfait, À revoir).
-    Exclut les "Non évaluable" qui sont de simples ouvertures du chat sans question utilisateur.
+    use_llm=True : utilise Évaluation LLM (plus complet, aligné sur les exports Yelda)
+    use_llm=False : utilise Évaluation (humaine)
     """
     if df_yelda is None or df_yelda.empty:
         return pd.DataFrame()
-    eval_col = COL_EVALUATION if COL_EVALUATION in df_yelda.columns else None
+    eval_col = COL_EVALUATION_LLM if (use_llm and COL_EVALUATION_LLM in df_yelda.columns) else (
+        COL_EVALUATION if COL_EVALUATION in df_yelda.columns else None
+    )
     if not eval_col:
         return df_yelda
-    s = df_yelda[eval_col].fillna('').astype(str).str.lower()
+    s = df_yelda[eval_col].fillna('').astype(str).str.strip().str.lower()
     mask = s.str.contains('satisfait') | s.str.contains('revoir')
     return df_yelda[mask].copy()
 
@@ -110,8 +113,9 @@ def compute_yelda_kpis(df_yelda_filtered):
         nb_tickets_crees = df[parcours_col].apply(has_ticket_created).sum()
     
     evaluation_counts = {'Satisfait': 0, 'Insatisfait': 0, 'À revoir': 0}
-    if eval_col:
-        for val, cnt in df[eval_col].value_counts(dropna=False).items():
+    count_col = eval_llm_col if eval_llm_col and eval_llm_col in df.columns else eval_col
+    if count_col:
+        for val, cnt in df[count_col].value_counts(dropna=False).items():
             s = str(val).strip().lower()
             if 'insatisfait' in s:
                 evaluation_counts['Insatisfait'] += cnt
