@@ -1,46 +1,110 @@
 import os
 import sys
+import logging
 from pathlib import Path
+from datetime import datetime
+
+# Configuration du log de démarrage (fichier app_launch.log)
+PROJECT_ROOT = Path(__file__).resolve().parent
+LOG_FILE = PROJECT_ROOT / "app_launch.log"
+_log_handler = logging.FileHandler(LOG_FILE, mode='a', encoding='utf-8')
+_log_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+_startup_log = logging.getLogger('app_startup')
+_startup_log.setLevel(logging.DEBUG)
+_startup_log.addHandler(_log_handler)
+_startup_log.info("=== Démarrage app.py %s ===", datetime.now().isoformat())
+
+def _log_step(msg):
+    _startup_log.info(msg)
+    print(f"[LOG] {msg}", file=sys.stderr, flush=True)
 
 # S'assurer que le dossier du projet est bien dans sys.path (Railway / déploiement)
-PROJECT_ROOT = Path(__file__).resolve().parent
+_log_step("PROJECT_ROOT=%s" % PROJECT_ROOT)
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+    _log_step("sys.path mis à jour")
 
 # En déploiement (sans hashed_pw.pkl), toujours utiliser config.example pour prendre les secrets à jour
 if not os.path.exists('hashed_pw.pkl') and os.path.exists('config.example.py'):
     import shutil
     shutil.copy('config.example.py', 'config.py')
+    _log_step("config.example copié vers config.py")
 
-import streamlit as st
+try:
+    _log_step("Import streamlit...")
+    import streamlit as st
+    _log_step("streamlit OK")
+except Exception as e:
+    _startup_log.exception("ERREUR import streamlit")
+    raise
 
 # set_page_config DOIT être la première commande Streamlit
+_log_step("set_page_config...")
 st.set_page_config(
     page_title=":bar_chart: Dashboard support",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 
 # Pré-charger les packages (évite KeyError 'data_processing' sur Railway/Streamlit rerun)
-import data_processing as _dp  # noqa: F401
-import utils as _u  # noqa: F401
+try:
+    _log_step("Import data_processing, utils...")
+    import data_processing as _dp  # noqa: F401
+    import utils as _u  # noqa: F401
+    _log_step("data_processing, utils OK")
+except Exception as e:
+    _startup_log.exception("ERREUR import data_processing/utils")
+    raise
 
-from data_processing.aircall_processing import process_aircall_data, def_df_support, agents_all, line_tous, agents_support, line_support, line_armatis, agents_armatis, load_aircall_data
-#from data_processing.aircall_processing import get_df_support
-from data_processing.hubspot_processing import process_hubspot_data, load_hubspot_data
-from data_processing.kpi_generation import generate_kpis, filtrer_par_periode, calculate_ticket_response_time, graph_activite, evo_appels_ticket, graph_charge_affid_stellair, graph_repartition_groupes_stellair, graph_yelda_evaluation, graph_yelda_evaluation_intentions, graph_yelda_interactions_tickets_semaine, graph_yelda_score_llm, graph_yelda_evolution_scores
-from utils.streamlit_helpers import load_data
-from utils.powerpoint_helpers import create_powerpoint, create_powerpoint_agents, create_powerpoint_stellair_minimal, create_powerpoint_agents_report
-import config
-from config import CREDENTIALS, AIRCALL_DATA_PATH_V1, AIRCALL_DATA_PATH_V2, AIRCALL_DATA_PATH_V3, HUBSPOT_TICKET_DATA_PATH, EVALUATION_DATA_PATH, YELDA_DATA_PATH, ANALYSE_APPELS_TICKETS_PATH
-import streamlit_authenticator as stauth
-from pptx import Presentation
-from pptx.util import Inches, Pt
-import io
-import tempfile
-import pandas as pd
+try:
+    _log_step("Import aircall_processing...")
+    from data_processing.aircall_processing import process_aircall_data, def_df_support, agents_all, line_tous, agents_support, line_support, line_armatis, agents_armatis, load_aircall_data
+    _log_step("aircall_processing OK")
+except Exception as e:
+    _startup_log.exception("ERREUR import aircall_processing")
+    raise
+
+try:
+    _log_step("Import hubspot_processing, kpi_generation...")
+    from data_processing.hubspot_processing import process_hubspot_data, load_hubspot_data
+    from data_processing.kpi_generation import generate_kpis, filtrer_par_periode, calculate_ticket_response_time, graph_activite, evo_appels_ticket, graph_charge_affid_stellair, graph_repartition_groupes_stellair, graph_yelda_evaluation, graph_yelda_evaluation_intentions, graph_yelda_interactions_tickets_semaine, graph_yelda_score_llm, graph_yelda_evolution_scores, compute_concentration_metrics_stellair, graph_concentration_stellair, graph_concentration_histogram_stellair, get_top_clients_stellair
+    _log_step("hubspot, kpi_generation OK")
+except Exception as e:
+    _startup_log.exception("ERREUR import hubspot/kpi_generation")
+    raise
+
+try:
+    _log_step("Import utils.streamlit_helpers, powerpoint_helpers...")
+    from utils.streamlit_helpers import load_data
+    from utils.powerpoint_helpers import create_powerpoint, create_powerpoint_agents, create_powerpoint_stellair_minimal, create_powerpoint_agents_report
+    _log_step("streamlit_helpers, powerpoint_helpers OK")
+except Exception as e:
+    _startup_log.exception("ERREUR import streamlit_helpers/powerpoint_helpers")
+    raise
+
+try:
+    _log_step("Import config...")
+    import config
+    from config import CREDENTIALS, AIRCALL_DATA_PATH_V1, AIRCALL_DATA_PATH_V2, AIRCALL_DATA_PATH_V3, HUBSPOT_TICKET_DATA_PATH, EVALUATION_DATA_PATH, YELDA_DATA_PATH, ANALYSE_APPELS_TICKETS_PATH
+    _log_step("config OK")
+except Exception as e:
+    _startup_log.exception("ERREUR import config")
+    raise
+
+try:
+    _log_step("Import streamlit_authenticator, pptx, pandas...")
+    import streamlit_authenticator as stauth
+    from pptx import Presentation
+    from pptx.util import Inches, Pt
+    import io
+    import tempfile
+    import pandas as pd
+    _log_step("Tous les imports OK")
+except Exception as e:
+    _startup_log.exception("ERREUR import stauth/pptx/pandas")
+    raise
 
 import streamlit as st
 #from selenium import webdriver
@@ -201,6 +265,10 @@ elif authentification_status:
         # Ajouter les caches des dataframes support
         for option in ["support_stellair", "support_affid", "xmed", "tmaj"]:
             cache_keys_to_clear.append(f"df_support_{option}")
+        # Caches KPIs, temps de réponse, charge Affid/Stellair, répartition groupes par période
+        for key in list(st.session_state.keys()):
+            if any(key.startswith(p) for p in ("kpis_", "temps_reponse_", "charge_affid_", "repartition_groupes_")):
+                cache_keys_to_clear.append(key)
         
         for key in cache_keys_to_clear:
             if key in st.session_state:
@@ -224,12 +292,18 @@ elif authentification_status:
                     print(f"✅ Fichier de cache supprimé: {cache_file}")
                 except Exception as e:
                     print(f"⚠️ Impossible de supprimer {cache_file}: {e}")
-        
+        try:
+            from data_processing.top_clients_cache import clear_top_clients_cache
+            clear_top_clients_cache()
+        except Exception:
+            pass
+
         # Recharger les données
         st.session_state['df_aircall'] = load_aircall_data(AIRCALL_DATA_PATH_V1, AIRCALL_DATA_PATH_V2, AIRCALL_DATA_PATH_V3, force_reload=True)
         st.session_state['df_tickets'] = load_hubspot_data(HUBSPOT_TICKET_DATA_PATH)
         st.session_state['df_evaluation'] = pd.read_excel(EVALUATION_DATA_PATH)
-        st.success("✅ Données Aircall, HubSpot et Evaluation rechargées ! Les fichiers de cache ont été supprimés.")
+        st.session_state['data_reload_counter'] = st.session_state.get('data_reload_counter', 0) + 1
+        st.success("✅ Données Aircall, HubSpot, Evaluation, Yelda et analyse qualitative rechargées ! Les caches ont été vidés.")
 
     # Chargement initial si pas déjà en mémoire
     if 'df_aircall' not in st.session_state:
@@ -272,6 +346,72 @@ elif authentification_status:
 
 
     selection_page = st.sidebar.selectbox("Choix de la page", list(PAGES.keys()), key="unique_page_selection")
+
+    # --- Recherche dynamique numéro → call IDs ---
+    with st.sidebar.expander("🔍 Recherche par numéro → Call IDs", expanded=True):
+        st.caption("Saisissez un numéro pour afficher les Call IDs des appels associés.")
+        search_phone = st.text_input(
+            "Numéro de téléphone",
+            placeholder="0612345678 ou 33612345678",
+            key="search_phone_input"
+        )
+        if search_phone and len(search_phone.strip()) >= 6:
+            import re
+            query = re.sub(r'[\s\.\-\(\)]', '', search_phone.strip())
+            if query.startswith('0'):
+                query_alt = '33' + query[1:]
+            elif query.startswith('33') and len(query) >= 10:
+                query_alt = '0' + query[2:]
+            else:
+                query_alt = query
+            df_a = st.session_state.get('df_aircall')
+            if df_a is not None and 'FromNumber' in df_a.columns and 'ToNumber' in df_a.columns:
+                from_col = df_a['FromNumber'].astype(str).str.replace(r'[\s\.\-\(\)]', '', regex=True)
+                to_col = df_a['ToNumber'].astype(str).str.replace(r'[\s\.\-\(\)]', '', regex=True)
+                mask = from_col.str.contains(query, na=False) | to_col.str.contains(query, na=False)
+                if query != query_alt:
+                    mask = mask | from_col.str.contains(query_alt, na=False) | to_col.str.contains(query_alt, na=False)
+                matches = df_a[mask]
+                if not matches.empty:
+                    call_ids = []
+                    has_callid = 'CallId' in matches.columns
+                    if has_callid:
+                        for v in matches['CallId'].dropna().unique():
+                            try:
+                                if isinstance(v, (int, float)) and float(v) == int(float(v)):
+                                    vs = str(int(float(v)))
+                                else:
+                                    vs = str(v).strip()
+                            except (ValueError, TypeError):
+                                vs = str(v).strip()
+                            if vs and vs.lower() != 'nan':
+                                call_ids.append(vs)
+                        # Tri : numériques d'abord, puis alphanumériques (ex. CA0e15740...)
+                        def _sort_key(x):
+                            try:
+                                if x.lstrip('-').replace('.','').isdigit():
+                                    return (0, int(float(x)))
+                            except (ValueError, TypeError):
+                                pass
+                            return (1, x)
+                        call_ids = sorted(set(call_ids), key=_sort_key)
+                        without_id = int(matches['CallId'].isna().sum())
+                    st.markdown(f"**{len(matches)}** appel(s) trouvé(s)")
+                    st.markdown("---")
+                    if call_ids:
+                        st.markdown("**Call IDs :**")
+                        st.code(", ".join(call_ids), language=None)
+                        st.download_button(
+                            "📋 Télécharger la liste (TXT)",
+                            data="\n".join(call_ids),
+                            file_name=f"call_ids_{search_phone.strip()[:15]}.txt",
+                            mime="text/plain",
+                            key="dl_call_ids_search"
+                        )
+                    else:
+                        st.warning("Aucun Call ID disponible. Les données V1 n'ont pas de Call ID. Cliquez sur « Recharger les données » pour charger les exports V2/V3.")
+                else:
+                    st.info("Aucun appel trouvé pour ce numéro.")
 
     if selection_page == "Support":
         from data_processing.aircall_processing import process_aircall_data, def_df_support, agents_all, line_tous, agents_support, line_support, line_armatis, agents_armatis
@@ -345,8 +485,19 @@ elif authentification_status:
                 periode = periode_option
             
             periode_str = get_periode_str(periode)
-            df_support = filtrer_par_periode(df_support, periode)
-            kpis = generate_kpis(filtrer_par_periode(df_support, periode), filtrer_par_periode(df_tickets_processed, periode), agents)
+            df_support_periode = filtrer_par_periode(df_support, periode)
+            df_tickets_periode = filtrer_par_periode(df_tickets_processed, periode)
+            # Cache des KPIs par dataframe + période (évite recalculs à chaque rerun)
+            kpis_cache_key = f"kpis_{dataframe_option}_{periode_str}"
+            if kpis_cache_key not in st.session_state:
+                with st.spinner("Calcul des indicateurs..."):
+                    skip_charge = (dataframe_option == "support_stellair")  # graph calculé à part avec données complètes
+                    st.session_state[kpis_cache_key] = generate_kpis(
+                        df_support_periode, df_tickets_periode, agents,
+                        skip_charge_affid_stellair=skip_charge
+                    )
+            kpis = st.session_state[kpis_cache_key]
+            df_support = df_support_periode
 
             # Utiliser graph_activite_xmed pour la page xmed, graph_activite_tmaj pour TMAJ, sinon graph_activite normal
             if dataframe_option == "xmed":
@@ -391,12 +542,14 @@ elif authentification_status:
                     "Entrants vs Tickets (%)",
                     f"{round(kpis['activite_appels_pourcentage'] * 100, 2)}% / {round(kpis['activite_tickets_pourcentage'] * 100, 2)}%"
                 )
-                # Calcul du temps de réponse aux tickets
+                # Calcul du temps de réponse aux tickets (cache par période)
                 from data_processing.kpi_generation import calculate_ticket_response_time
-                moyenne_temps_reponse, graph_temps_reponse, df_temps_tickets = calculate_ticket_response_time(
-                    filtrer_par_periode(df_tickets_processed, periode), 
-                    agents_all
-                )
+                temps_rep_cache_key = f"temps_reponse_stellair_{periode_str}"
+                if temps_rep_cache_key not in st.session_state:
+                    st.session_state[temps_rep_cache_key] = calculate_ticket_response_time(
+                        df_tickets_periode, agents_all
+                    )
+                moyenne_temps_reponse, graph_temps_reponse, df_temps_tickets = st.session_state[temps_rep_cache_key]
 
                 col5.metric("Temps de réponse moyen aux tickets (h:min)", f"{int(moyenne_temps_reponse)}:{int((moyenne_temps_reponse % 1) * 60):02d}")
 
@@ -414,9 +567,11 @@ elif authentification_status:
                 
                 # Graphique Activité en % - NXT vs Stellair (nécessite les données complètes Affid + Stellair)
                 st.markdown("### 📊 Répartition des appels entre Affid (NXT) et Stellair")
-                fig_charge_pct_stellair, fig_charge_vol_stellair, _ = graph_charge_affid_stellair(
-                    filtrer_par_periode(st.session_state['df_support_processed'], periode)
-                )
+                charge_affid_cache_key = f"charge_affid_stellair_{periode_str}"
+                if charge_affid_cache_key not in st.session_state:
+                    df_full_periode = filtrer_par_periode(st.session_state['df_support_processed'], periode)
+                    st.session_state[charge_affid_cache_key] = graph_charge_affid_stellair(df_full_periode)
+                fig_charge_pct_stellair, fig_charge_vol_stellair, _ = st.session_state[charge_affid_cache_key]
                 st.plotly_chart(fig_charge_pct_stellair, use_container_width=True)
                 col1, col2 = st.columns([3, 1])
                 with col2:
@@ -527,11 +682,36 @@ elif authentification_status:
                 st.markdown("## 🤖 Indicateurs Yelda (Chatbot Stellair)")
                 try:
                     from data_processing.yelda_processing import load_yelda_data, filter_yelda_stellair, filter_yelda_evaluated, filtrer_yelda_par_periode, compute_yelda_kpis
-                    df_yelda_raw = load_yelda_data(YELDA_DATA_PATH)
+                    # Chemin absolu pour éviter toute ambiguïté (OneDrive, cwd, etc.)
+                    yelda_path = (PROJECT_ROOT / YELDA_DATA_PATH) if not (Path(YELDA_DATA_PATH).is_absolute()) else Path(YELDA_DATA_PATH)
+                    df_yelda_raw = load_yelda_data(str(yelda_path))
                     if df_yelda_raw is not None and not df_yelda_raw.empty:
                         df_yelda_fse = filter_yelda_stellair(df_yelda_raw)
                         df_yelda_periode = filtrer_yelda_par_periode(df_yelda_fse, periode)
                         df_yelda_eval = filter_yelda_evaluated(df_yelda_periode)
+                        with st.expander("🔍 Diagnostic Yelda (chemin, effectifs par filtre)"):
+                            import os as _os_diag
+                            mtime = _os_diag.path.getmtime(yelda_path) if yelda_path.exists() else 0
+                            from datetime import datetime as _dt
+                            st.caption(f"Fichier lu : `{yelda_path}`")
+                            st.caption(f"Dernière modif : {_dt.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')}" if mtime else "N/A")
+                            st.caption(f"Brut : {len(df_yelda_raw)} | fse.stellair : {len(df_yelda_fse)} | Période : {len(df_yelda_periode)} | Évaluées : {len(df_yelda_eval)}")
+                            eval_col = next((c for c in df_yelda_periode.columns if 'valuation' in c.lower() and 'llm' not in c.lower()), None) or 'Évaluation'
+                            eval_llm_col = next((c for c in df_yelda_periode.columns if 'valuation' in c.lower() and 'llm' in c.lower()), None)
+                            if eval_col in df_yelda_periode.columns:
+                                counts = df_yelda_periode[eval_col].value_counts(dropna=False)
+                                st.caption(f"Répartition « {eval_col} » :")
+                                df_counts = counts.rename_axis('Valeur').reset_index(name='Nb')
+                                st.dataframe(df_counts, use_container_width=True, hide_index=True)
+                                nb_sat_rev = df_yelda_periode[eval_col].fillna('').astype(str).str.lower().str.contains('satisfait|revoir', regex=True).sum()
+                                st.caption(f"→ Satisfait/Insatisfait/À revoir (regex) : {int(nb_sat_rev)}")
+                            if eval_llm_col and eval_llm_col in df_yelda_periode.columns:
+                                counts_llm = df_yelda_periode[eval_llm_col].value_counts(dropna=False)
+                                st.caption(f"Répartition « {eval_llm_col} » :")
+                                df_llm = counts_llm.rename_axis('Valeur').reset_index(name='Nb')
+                                st.dataframe(df_llm, use_container_width=True, hide_index=True)
+                                nb_llm_sat_rev = df_yelda_periode[eval_llm_col].fillna('').astype(str).str.lower().str.contains('satisfait|revoir', regex=True).sum()
+                                st.caption(f"→ Satisfait/Insatisfait/À revoir : {int(nb_llm_sat_rev)}")
                         kpis_yelda = compute_yelda_kpis(df_yelda_eval)
                         nb_satisfait = kpis_yelda['evaluation_counts']['Satisfait']
                         nb_insatisfait = kpis_yelda['evaluation_counts']['Insatisfait']
@@ -539,7 +719,7 @@ elif authentification_status:
                         total_eval = nb_satisfait + nb_insatisfait + nb_revoir
                         taux_satisfaction = round(100 * nb_satisfait / total_eval, 1) if total_eval > 0 else 0
                         col1, col2, col3, col4, col5 = st.columns(5)
-                        col1.metric("Conversations évaluées (fse.stellair.fr)", kpis_yelda['nb_interactions'])
+                        col1.metric("Conversations évaluées (fse.stellair.fr) — Évaluation LLM", kpis_yelda['nb_interactions'])
                         col2.metric("Tickets créés", kpis_yelda['nb_tickets_crees'])
                         col3.metric("✅ Satisfait (éval. LLM)", nb_satisfait)
                         col4.metric("❌ Insatisfait (éval. LLM)", nb_insatisfait)
@@ -629,13 +809,127 @@ elif authentification_status:
                 except Exception as e:
                     st.warning(f"Analyse qualitative non disponible : {e}")
 
-                # Nouveau graphique de répartition des groupes d'agents
-                st.plotly_chart(graph_repartition_groupes_stellair(df_support), use_container_width=True)
+                # ----------- CONCENTRATION DES DEMANDES (Pareto) -----------
+                st.markdown("## 📊 Concentration des demandes")
+                st.caption("Les demandes proviennent-elles d'un petit groupe de clients ou sont-elles réparties ? (numéros uniques pour les appels, contacts pour les tickets)")
+                conc_cache_key = f"conc_stellair_{periode_str}"
+                metrics_conc = None
+                try:
+                    from data_processing.top_clients_cache import load_metrics_concentration, save_metrics_concentration
+                    metrics_conc = load_metrics_concentration(periode_str)
+                except Exception:
+                    pass
+                if metrics_conc is None and st.session_state.get(conc_cache_key) is not None:
+                    metrics_conc = st.session_state[conc_cache_key]
+                if metrics_conc is None:
+                    do_compute = st.button("📥 Charger l'analyse de concentration", key="btn_load_concentration")
+                else:
+                    do_compute = False
+                if do_compute:
+                    try:
+                        df_tickets_periode = filtrer_par_periode(df_tickets_processed, periode)
+                        df_tickets_stellair = df_tickets_periode[df_tickets_periode['Pipeline'].isin(['SSI', 'Chatbot Yelda'])].copy()
+                        metrics_conc = compute_concentration_metrics_stellair(df_support, df_tickets_stellair)
+                        if metrics_conc:
+                            st.session_state[conc_cache_key] = metrics_conc
+                            try:
+                                save_metrics_concentration(periode_str, metrics_conc)
+                            except Exception:
+                                pass
+                    except (TimeoutError, OSError) as e:
+                        if getattr(e, 'errno', None) == 60:
+                            st.warning("⏱️ Timeout. Projet sur OneDrive ? Attendez la synchro ou déplacez le projet en local, puis réessayez.")
+                        else:
+                            st.warning(str(e))
+                    except Exception as e:
+                        st.warning(f"Erreur : {e}")
+                if metrics_conc and (metrics_conc.get('appels') or metrics_conc.get('tickets')):
+                        df_tickets_periode = filtrer_par_periode(df_tickets_processed, periode)
+                        df_tickets_stellair = df_tickets_periode[df_tickets_periode['Pipeline'].isin(['SSI', 'Chatbot Yelda'])].copy()
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if metrics_conc.get('appels'):
+                                a = metrics_conc['appels']
+                                st.markdown("### Appels (numéros uniques)")
+                                st.metric("Numéros uniques", a['nb_contacts'])
+                                st.metric("Total appels", a['nb_demandes'])
+                                st.metric("Contacts avec 1 seul appel", f"{a['pct_1_demande']}%")
+                                st.metric("Contacts avec 5+ appels", f"{a['pct_5plus_demandes']}%")
+                                st.metric("Top 20% des numéros = % des appels", f"{a['top20_pct_demandes']}%")
+                        with col2:
+                            if metrics_conc.get('tickets'):
+                                t = metrics_conc['tickets']
+                                st.markdown("### Tickets (contacts)")
+                                st.metric("Contacts uniques", t['nb_contacts'])
+                                st.metric("Total tickets", t['nb_demandes'])
+                                st.metric("Contacts avec 1 seul ticket", f"{t['pct_1_demande']}%")
+                                st.metric("Contacts avec 5+ tickets", f"{t['pct_5plus_demandes']}%")
+                                st.metric("Top 20% des contacts = % des tickets", f"{t['top20_pct_demandes']}%")
+                        st.plotly_chart(graph_concentration_stellair(metrics_conc), use_container_width=True)
+                        st.plotly_chart(graph_concentration_histogram_stellair(metrics_conc), use_container_width=True)
+
+                        # ----------- CLIENTS À FORT VOLUME (identification pour analyse et solutions) -----------
+                        st.markdown("### 🔍 Clients sollicitant le plus le support")
+                        st.caption("Identifiez les clients à fort volume pour analyser les causes et proposer des solutions (formation, documentation, paramétrage, etc.)")
+                        seuil_min = st.slider("Nombre minimum de demandes pour figurer", min_value=2, max_value=10, value=3, key="seuil_top_clients")
+                        try:
+                            from data_processing.top_clients_cache import load_top_clients_stellair, save_top_clients_stellair
+                            top_clients = load_top_clients_stellair(periode_str, seuil_min)
+                            if top_clients is None:
+                                top_clients = get_top_clients_stellair(df_support, df_tickets_stellair, seuil_min=seuil_min, top_n=50)
+                                if top_clients:
+                                    save_top_clients_stellair(periode_str, seuil_min, top_clients.get('top_appels'), top_clients.get('top_tickets'))
+                        except Exception:
+                            top_clients = get_top_clients_stellair(df_support, df_tickets_stellair, seuil_min=seuil_min, top_n=50)
+                        if top_clients.get('top_appels') is not None or top_clients.get('top_tickets') is not None:
+                            tab_app, tab_tick = st.tabs(["📞 Appels (numéros)", "🎫 Tickets (contacts)"])
+                            with tab_app:
+                                if top_clients.get('top_appels') is not None:
+                                    df_top_app = top_clients['top_appels']
+                                    df_display_app = df_top_app[['numero', 'nb_appels', 'pct_du_total']].copy()
+                                    df_display_app.columns = ['Numéro', 'Nb appels', '% du total']
+                                    try:
+                                        st.table(df_display_app)
+                                    except (TimeoutError, OSError, Exception):
+                                        st.text(df_display_app.to_string(index=False))
+                                    csv_app = df_display_app.to_csv(index=False, encoding='utf-8-sig')
+                                    st.download_button("📥 Exporter la liste (CSV)", data=csv_app, file_name=f"top_numeros_appels_stellair_{periode_str.replace(' ', '_').replace('/', '-')}.csv", mime="text/csv", key="dl_top_appels")
+                                else:
+                                    st.info("Aucun numéro n'atteint le seuil minimal pour cette période.")
+                            with tab_tick:
+                                if top_clients.get('top_tickets') is not None:
+                                    df_top_tick = top_clients['top_tickets']
+                                    cols_disp = ['contact_nom', 'nb_tickets', 'pct_du_total']
+                                    if 'categories_principales' in df_top_tick.columns:
+                                        cols_disp.append('categories_principales')
+                                    if 'sujets_recurrents' in df_top_tick.columns:
+                                        cols_disp.append('sujets_recurrents')
+                                    df_display_tick = df_top_tick[[c for c in cols_disp if c in df_top_tick.columns]].copy()
+                                    df_display_tick.columns = [c.replace('_', ' ').title() for c in df_display_tick.columns]
+                                    try:
+                                        st.table(df_display_tick)
+                                    except (TimeoutError, OSError, Exception):
+                                        st.text(df_display_tick.to_string(index=False))
+                                    csv_tick = df_display_tick.to_csv(index=False, encoding='utf-8-sig')
+                                    st.download_button("📥 Exporter la liste (CSV)", data=csv_tick, file_name=f"top_contacts_tickets_stellair_{periode_str.replace(' ', '_').replace('/', '-')}.csv", mime="text/csv", key="dl_top_tickets")
+                                else:
+                                    st.info("Aucun contact n'atteint le seuil minimal pour cette période.")
+                        else:
+                            st.info("Aucun client ne dépasse le seuil minimal pour cette période.")
+                else:
+                    st.info("Données insuffisantes pour l'analyse de concentration.")
+
+                # Nouveau graphique de répartition des groupes d'agents (cache par période)
+                rep_groupes_key = f"repartition_groupes_{periode_str}"
+                if rep_groupes_key not in st.session_state:
+                    st.session_state[rep_groupes_key] = graph_repartition_groupes_stellair(df_support)
+                fig_repartition = st.session_state[rep_groupes_key]
+                st.plotly_chart(fig_repartition, use_container_width=True)
                 col1, col2 = st.columns([3, 1])
                 with col2:
                     if st.button("📊 Exporter en PowerPoint", key="btn_repartition_groupes"):
                         try:
-                            pptx_io = create_single_graph_powerpoint(graph_repartition_groupes_stellair(df_support), "Répartition des groupes d'agents", periode_str)
+                            pptx_io = create_single_graph_powerpoint(fig_repartition, "Répartition des groupes d'agents", periode_str)
                             st.download_button(
                                 label="📥 Télécharger",
                                 data=pptx_io,
@@ -2436,128 +2730,142 @@ elif authentification_status:
                 key="unique_partenaire_selection"
             )
 
-            cache_key_kpi_partenaire = f'kpi_partenaire_{partenaire}_{periode}_{hash(str(df_tickets_periode.shape))}'
-            if cache_key_kpi_partenaire not in st.session_state:
-                with st.spinner(f"Calcul des KPI pour {partenaire} en cours..."):
-                    sla_fig, sla_2h, delai_moyen, df_partenaire, _ = sla(df_tickets_periode, partenaire, canal="partenaire")
-                    fig_categories = metrics_nombre_ticket_categorie(df_tickets_periode, partenaire)
-                    st.session_state[cache_key_kpi_partenaire] = {
-                        "sla_fig": sla_fig,
-                        "delai_moyen": delai_moyen,
-                        "df_partenaire": df_partenaire,
-                        "fig_categories": fig_categories,
-                    }
-                    st.success(f"✅ KPI {partenaire} calculés et mis en cache")
+            # Bouton de retry si précédent timeout
+            if st.button("🔄 Réessayer le chargement des KPI Partenaires", key="retry_kpi_partenaire"):
+                keys_to_remove = [k for k in st.session_state if k.startswith("kpi_partenaire_")]
+                for k in keys_to_remove:
+                    del st.session_state[k]
+                st.rerun()
 
-            kpi_part = st.session_state[cache_key_kpi_partenaire]
-            df_partenaire = kpi_part["df_partenaire"]
+            try:
+                cache_key_kpi_partenaire = f'kpi_partenaire_{partenaire}_{periode}_{hash(str(df_tickets_periode.shape))}'
+                if cache_key_kpi_partenaire not in st.session_state:
+                    with st.spinner(f"Calcul des KPI pour {partenaire} en cours..."):
+                        sla_fig, sla_2h, delai_moyen, df_partenaire, _ = sla(df_tickets_periode, partenaire, canal="partenaire")
+                        fig_categories = metrics_nombre_ticket_categorie(df_tickets_periode, partenaire)
+                        st.session_state[cache_key_kpi_partenaire] = {
+                            "sla_fig": sla_fig,
+                            "delai_moyen": delai_moyen,
+                            "df_partenaire": df_partenaire,
+                            "fig_categories": fig_categories,
+                        }
+                        st.success(f"✅ KPI {partenaire} calculés et mis en cache")
 
-            if df_partenaire.empty:
-                st.warning(f"Aucun ticket pour {partenaire} sur la période sélectionnée.")
-                return
+                kpi_part = st.session_state[cache_key_kpi_partenaire]
+                df_partenaire = kpi_part["df_partenaire"]
 
-            def pick_date_column(df):
-                candidates = ['Date', 'Date de création', 'Created', 'Create date', 'created_at', 'Date entrée N2']
-                for col in candidates:
-                    if col in df.columns:
-                        return col
-                return None
+                if df_partenaire.empty:
+                    st.warning(f"Aucun ticket pour {partenaire} sur la période sélectionnée.")
+                    return
 
-            date_col = pick_date_column(df_partenaire)
-            if date_col is None:
-                st.error("Impossible de trouver une colonne de date pour calculer les métriques mensuelles.")
-                return
+                def pick_date_column(df):
+                    candidates = ['Date', 'Date de création', 'Created', 'Create date', 'created_at', 'Date entrée N2']
+                    for col in candidates:
+                        if col in df.columns:
+                            return col
+                    return None
 
-            df_partenaire = df_partenaire.copy()
-            df_partenaire[date_col] = pd.to_datetime(df_partenaire[date_col], errors='coerce')
-            df_partenaire = df_partenaire.dropna(subset=[date_col])
+                date_col = pick_date_column(df_partenaire)
+                if date_col is None:
+                    st.error("Impossible de trouver une colonne de date pour calculer les métriques mensuelles.")
+                    return
 
-            df_partenaire['Mois'] = df_partenaire[date_col].dt.to_period('M').astype(str)
-            df_partenaire['Heure'] = df_partenaire[date_col].dt.hour
+                df_partenaire = df_partenaire.copy()
+                df_partenaire[date_col] = pd.to_datetime(df_partenaire[date_col], errors='coerce')
+                df_partenaire = df_partenaire.dropna(subset=[date_col])
 
-            id_col = 'Ticket ID' if 'Ticket ID' in df_partenaire.columns else df_partenaire.columns[0]
-            tickets_par_mois = df_partenaire.groupby('Mois')[id_col].count().reset_index(name='Tickets')
-            tickets_par_mois = tickets_par_mois.sort_values('Mois')
-            moyenne_tickets_mois = tickets_par_mois['Tickets'].mean() if not tickets_par_mois.empty else 0
+                df_partenaire['Mois'] = df_partenaire[date_col].dt.to_period('M').astype(str)
+                df_partenaire['Heure'] = df_partenaire[date_col].dt.hour
 
-            resp_par_mois = None
-            df_resp = None
-            moyenne_reponse_mensuelle = None
-            mediane_reponse_mensuelle = None
-            if 'working_hours' in df_partenaire.columns:
-                df_partenaire['working_hours'] = pd.to_numeric(df_partenaire['working_hours'], errors='coerce')
-                df_resp = df_partenaire.dropna(subset=['working_hours'])
-                if not df_resp.empty:
-                    # Limiter les valeurs extrêmes pour éviter d'aplatir le graphique
-                    cap = df_resp['working_hours'].quantile(0.995)
-                    df_resp_viz = df_resp.copy()
-                    if pd.notna(cap):
-                        df_resp_viz['working_hours_capped'] = df_resp_viz['working_hours'].clip(upper=cap)
-                    else:
-                        df_resp_viz['working_hours_capped'] = df_resp_viz['working_hours']
+                id_col = 'Ticket ID' if 'Ticket ID' in df_partenaire.columns else df_partenaire.columns[0]
+                tickets_par_mois = df_partenaire.groupby('Mois')[id_col].count().reset_index(name='Tickets')
+                tickets_par_mois = tickets_par_mois.sort_values('Mois')
+                moyenne_tickets_mois = tickets_par_mois['Tickets'].mean() if not tickets_par_mois.empty else 0
 
-                    resp_par_mois = df_resp_viz.groupby(['Mois'])['working_hours_capped'].mean().reset_index()
-                    moyenne_reponse_mensuelle = resp_par_mois['working_hours_capped'].mean()
-                    mediane_reponse_mensuelle = df_resp_viz['working_hours_capped'].median()
+                resp_par_mois = None
+                df_resp = None
+                moyenne_reponse_mensuelle = None
+                mediane_reponse_mensuelle = None
+                if 'working_hours' in df_partenaire.columns:
+                    df_partenaire['working_hours'] = pd.to_numeric(df_partenaire['working_hours'], errors='coerce')
+                    df_resp = df_partenaire.dropna(subset=['working_hours'])
+                    if not df_resp.empty:
+                        # Limiter les valeurs extrêmes pour éviter d'aplatir le graphique
+                        cap = df_resp['working_hours'].quantile(0.995)
+                        df_resp_viz = df_resp.copy()
+                        if pd.notna(cap):
+                            df_resp_viz['working_hours_capped'] = df_resp_viz['working_hours'].clip(upper=cap)
+                        else:
+                            df_resp_viz['working_hours_capped'] = df_resp_viz['working_hours']
 
-            # Graphique combiné : tickets (barres) + temps moyen de réponse (courbe) avec axe secondaire
-            merged = tickets_par_mois.copy()
-            if resp_par_mois is not None:
-                merged = merged.merge(resp_par_mois, on='Mois', how='left')
-            merged = merged.sort_values('Mois')
+                        resp_par_mois = df_resp_viz.groupby(['Mois'])['working_hours_capped'].mean().reset_index()
+                        moyenne_reponse_mensuelle = resp_par_mois['working_hours_capped'].mean()
+                        mediane_reponse_mensuelle = df_resp_viz['working_hours_capped'].median()
 
-            fig_tickets_mois = go.Figure()
-            fig_tickets_mois.add_bar(
-                x=merged['Mois'],
-                y=merged['Tickets'],
-                name="Tickets / mois",
-                marker_color="#1f77b4",
-            )
-            if resp_par_mois is not None:
-                fig_tickets_mois.add_scatter(
+                # Graphique combiné : tickets (barres) + temps moyen de réponse (courbe) avec axe secondaire
+                merged = tickets_par_mois.copy()
+                if resp_par_mois is not None:
+                    merged = merged.merge(resp_par_mois, on='Mois', how='left')
+                merged = merged.sort_values('Mois')
+
+                fig_tickets_mois = go.Figure()
+                fig_tickets_mois.add_bar(
                     x=merged['Mois'],
-                    y=merged['working_hours_capped'],
-                    name="Temps moyen de réponse (h)",
-                    mode="lines+markers",
-                    yaxis="y2",
-                    line=dict(color="#ff7f0e"),
+                    y=merged['Tickets'],
+                    name="Tickets / mois",
+                    marker_color="#1f77b4",
+                )
+                if resp_par_mois is not None:
+                    fig_tickets_mois.add_scatter(
+                        x=merged['Mois'],
+                        y=merged['working_hours_capped'],
+                        name="Temps moyen de réponse (h)",
+                        mode="lines+markers",
+                        yaxis="y2",
+                        line=dict(color="#ff7f0e"),
+                    )
+
+                fig_tickets_mois.update_layout(
+                    template="plotly_dark",
+                    title="Tickets reçus par mois & temps moyen de réponse",
+                    yaxis=dict(title="Tickets par mois"),
+                    yaxis2=dict(
+                        title="Temps moyen de réponse (h)",
+                        overlaying="y",
+                        side="right",
+                    ),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                 )
 
-            fig_tickets_mois.update_layout(
-                template="plotly_dark",
-                title="Tickets reçus par mois & temps moyen de réponse",
-                yaxis=dict(title="Tickets par mois"),
-                yaxis2=dict(
-                    title="Temps moyen de réponse (h)",
-                    overlaying="y",
-                    side="right",
-                ),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            )
+                fig_box_resp = None
+                if df_resp is not None and not df_resp.empty:
+                    df_box = df_resp_viz if 'df_resp_viz' in locals() else df_resp
+                    y_box = 'working_hours_capped' if 'working_hours_capped' in df_box.columns else 'working_hours'
+                    fig_box_resp = px.box(
+                        df_box,
+                        x='Mois',
+                        y=y_box,
+                        title="Distribution des temps de réponse par mois",
+                        labels={y_box: 'Temps de réponse (h)', 'Mois': 'Mois'},
+                        points="outliers"
+                    )
+                    fig_box_resp.update_layout(template="plotly_dark")
 
-            fig_box_resp = None
-            if df_resp is not None and not df_resp.empty:
-                df_box = df_resp_viz if 'df_resp_viz' in locals() else df_resp
-                y_box = 'working_hours_capped' if 'working_hours_capped' in df_box.columns else 'working_hours'
-                fig_box_resp = px.box(
-                    df_box,
-                    x='Mois',
-                    y=y_box,
-                    title="Distribution des temps de réponse par mois",
-                    labels={y_box: 'Temps de réponse (h)', 'Mois': 'Mois'},
-                    points="outliers"
-                )
-                fig_box_resp.update_layout(template="plotly_dark")
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Délai moyen de réponse (heures)", f"{kpi_part['delai_moyen']:.2f}")
+                col2.metric("Médiane temps de réponse (heures)", f"{(mediane_reponse_mensuelle or 0):.2f}")
+                col3.metric("Tickets / mois (moyenne)", f"{moyenne_tickets_mois:.1f}")
 
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Délai moyen de réponse (heures)", f"{kpi_part['delai_moyen']:.2f}")
-            col2.metric("Médiane temps de réponse (heures)", f"{(mediane_reponse_mensuelle or 0):.2f}")
-            col3.metric("Tickets / mois (moyenne)", f"{moyenne_tickets_mois:.1f}")
+                st.plotly_chart(fig_tickets_mois, use_container_width=True)
+                if fig_box_resp is not None:
+                    st.plotly_chart(fig_box_resp, use_container_width=True)
+                st.plotly_chart(kpi_part["fig_categories"], use_container_width=True)
 
-            st.plotly_chart(fig_tickets_mois, use_container_width=True)
-            if fig_box_resp is not None:
-                st.plotly_chart(fig_box_resp, use_container_width=True)
-            st.plotly_chart(kpi_part["fig_categories"], use_container_width=True)
+            except (TimeoutError, OSError) as e:
+                import errno
+                if isinstance(e, OSError) and getattr(e, 'errno', None) != errno.ETIMEDOUT:
+                    raise
+                st.error("⏱️ Délai dépassé (timeout). Cela peut arriver avec OneDrive. Cliquez sur « Réessayer le chargement des KPI Partenaires » pour recharger.")
 
         tickets()
 

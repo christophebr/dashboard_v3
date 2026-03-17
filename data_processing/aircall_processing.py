@@ -117,6 +117,11 @@ def normalize_v3_data(df_v3):
     # Normaliser la colonne line (Excel peut exporter "Line" avec majuscule)
     if 'Line' in df.columns and 'line' not in df.columns:
         df = df.rename(columns={'Line': 'line'})
+    # Normaliser Call id (V3 peut avoir 'call id' en minuscules)
+    if 'call id' in df.columns and 'Call id' not in df.columns:
+        df = df.rename(columns={'call id': 'Call id'})
+    if 'call id (internal)' in df.columns and 'Call id (internal)' not in df.columns:
+        df = df.rename(columns={'call id (internal)': 'Call id (internal)'})
     
     return df
 
@@ -176,11 +181,11 @@ def load_aircall_data(path_v1, path_v2, path_v3=None, force_reload=False, db_pat
     files_v2 = [file for file in os.listdir(path_v2) if not file.startswith('.')] if os.path.exists(path_v2) else []
     files_v3 = [file for file in os.listdir(path_v3) if not file.startswith('.')] if path_v3 and os.path.exists(path_v3) else []
 
-    # Optimisation : charger seulement les colonnes nécessaires
+    # Optimisation : charger seulement les colonnes nécessaires (Call id pour recherche numéro → appels)
     needed_columns_v2 = ['line', 'date (TZ offset incl.)', 'time (TZ offset incl.)', 'number timezone', 
                      'datetime (UTC)', 'country_code', 'direction', 'from', 'to', 'answered',
                      'missed_call_reason', 'user', 'duration (total)', 'duration (in call)', 
-                     'via', 'voicemail', 'tags', 'IVR Branch']
+                     'via', 'voicemail', 'tags', 'IVR Branch', 'Call id', 'Call id (internal)']
     
     needed_columns_v1 = ['line', 'date (TZ offset incl.)', 'time (TZ offset incl.)', 'number timezone', 
                      'datetime (UTC)', 'country_code', 'direction', 'from', 'to', 'answered',
@@ -206,11 +211,21 @@ def load_aircall_data(path_v1, path_v2, path_v3=None, force_reload=False, db_pat
         except Exception as e:
             print(f"⚠️ Erreur lors du chargement V1: {e}")
     
-    # Charger les données V2
+    # Charger les données V2 (Call id optionnel selon version export)
     if files_v2:
         try:
-            data_v2 = pd.concat([pd.read_excel(os.path.join(path_v2, file), usecols=needed_columns_v2) 
-                                for file in files_v2])
+            v2_frames = []
+            for file in files_v2:
+                fp = os.path.join(path_v2, file)
+                try:
+                    df = pd.read_excel(fp, usecols=needed_columns_v2)
+                except (ValueError, KeyError):
+                    needed_v2_base = [c for c in needed_columns_v2 if c not in ('Call id', 'Call id (internal)')]
+                    df = pd.read_excel(fp, usecols=needed_v2_base)
+                    df['Call id'] = None
+                    df['Call id (internal)'] = None
+                v2_frames.append(df)
+            data_v2 = pd.concat(v2_frames)
             data_list.append(data_v2)
             print(f"✅ {len(files_v2)} fichier(s) V2 chargé(s)")
         except Exception as e:
@@ -240,14 +255,14 @@ def load_aircall_data(path_v1, path_v2, path_v3=None, force_reload=False, db_pat
     # Concaténer toutes les données
     raw_data = pd.concat(data_list, ignore_index=True)
     
-    # S'assurer que toutes les colonnes nécessaires sont présentes
+    # S'assurer que toutes les colonnes nécessaires sont présentes (Call id optionnel pour V1)
     columns_order = ['line', 'date (TZ offset incl.)', 'time (TZ offset incl.)', 'number timezone', 'datetime (UTC)', 'country_code', 'direction', 'from',
-                     'to', 'answered','missed_call_reason', 'user', 'duration (total)','duration (in call)', 'via', 'voicemail', 'tags', 'IVR Branch']
+                     'to', 'answered','missed_call_reason', 'user', 'duration (total)','duration (in call)', 'via', 'voicemail', 'tags', 'IVR Branch', 'Call id', 'Call id (internal)']
     
     # Ajouter les colonnes manquantes si nécessaire
     for col in columns_order:
         if col not in raw_data.columns:
-            raw_data[col] = ""
+            raw_data[col] = None if col in ('Call id', 'Call id (internal)') else ""
     
     # Réorganiser les colonnes
     available_columns = [col for col in columns_order if col in raw_data.columns]
@@ -276,7 +291,34 @@ def process_aircall_data(data):
                         "from": "FromNumber", "to": "ToNumber", 
                         "user": "UserName", 
                         "comments": "Note", 
-                        "tags": "Tags", "missed_call_reason": "ScenarioName"}, inplace=True)
+                        "tags": "Tags", "missed_call_reason": "ScenarioName",
+                        "Call id (internal)": "_CallIdInternal", "Call id": "_CallIdHex"}, inplace=True)
+    # CallId : priorité à Call id (internal) (numérique API), sinon Call id (hex)
+    # Normaliser : retirer les virgules (format milliers Excel FR) et convertir en int
+    def _normalize_call_id(val):
+        if pd.isna(val):
+            return None
+        s = str(val).strip().replace(',', '').replace(' ', '')
+        if not s or s.lower() == 'nan':
+            return None
+        try:
+            return int(float(s))
+        except (ValueError, TypeError):
+            return str(val).strip() if str(val).strip() else None  # hex ou autre
+    if '_CallIdInternal' in data.columns:
+        internal = data['_CallIdInternal'].apply(_normalize_call_id)
+        if '_CallIdHex' in data.columns:
+            hex_vals = data['_CallIdHex'].apply(_normalize_call_id)
+            data['CallId'] = internal.where(internal.notna(), hex_vals)
+        else:
+            data['CallId'] = internal
+    elif '_CallIdHex' in data.columns:
+        data['CallId'] = data['_CallIdHex'].apply(_normalize_call_id)
+    else:
+        data['CallId'] = None
+    for c in ['_CallIdInternal', '_CallIdHex']:
+        if c in data.columns:
+            data.drop(columns=[c], inplace=True)
     
     # Optimisation : conversions de dates vectorisées
     data['time (TZ offset incl.)'] = pd.to_datetime(data['time (TZ offset incl.)'], format='%H:%M:%S', errors='coerce')
@@ -312,11 +354,13 @@ def process_aircall_data(data):
     nrp_mask = (data['Tags'].isin(['NRP'])) & (data['direction'] == 'outbound')
     data.loc[nrp_mask, 'LastState'] = data.loc[nrp_mask, 'NRP']
     
-    # Sélection des colonnes finales
+    # Sélection des colonnes finales (CallId pour recherche numéro → appels)
     final_columns = ['line', 'Semaine', 'Date', 'Jour', 'Heure', 'direction', 'LastState', 
                     'ScenarioName', 'StartTime', 'HangupTime', 'time (TZ offset incl.)', 
                     'TotalDuration', 'InCallDuration', 'FromNumber', 'ToNumber', 
-                    'UserName', 'Tags', 'IVR Branch']
+                    'UserName', 'Tags', 'IVR Branch', 'CallId']
+    if 'CallId' not in data.columns:
+        data['CallId'] = None
     data = data[final_columns]
     
     # Remplacements vectorisés pour les noms d'utilisateurs

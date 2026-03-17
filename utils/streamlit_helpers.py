@@ -136,6 +136,18 @@ def read_excel_and_convert_to_parquet(xls_path, parquet_path):
         return pd.read_excel(xls_path)
 
 @st.cache_data(ttl=3600)  # Cache pour 1 heure
+def load_yelda_cached(path, _file_mtime=0, _reload_counter=0):
+    """Charge les données Yelda avec cache. _file_mtime et _reload_counter permettent d'invalider le cache."""
+    from data_processing.yelda_processing import load_yelda_data
+    return load_yelda_data(path)
+
+@st.cache_data(ttl=3600)  # Cache pour 1 heure
+def load_analyse_appels_tickets_cached(path, _file_mtime=0, _reload_counter=0):
+    """Charge l'analyse qualitative avec cache. _file_mtime et _reload_counter permettent d'invalider le cache."""
+    from data_processing.analyse_appels_tickets_processing import load_analyse_appels_tickets
+    return load_analyse_appels_tickets(path)
+
+@st.cache_data(ttl=3600)  # Cache pour 1 heure
 def load_data():
     df_support = process_aircall_and_cache(
         AIRCALL_DATA_PATH_V1,
