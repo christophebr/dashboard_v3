@@ -38,17 +38,24 @@ fi
 # provoquer l'apparition d'un prompt >>> après exécution.
 unset PYTHONINSPECT
 unset PYTHONSTARTUP
+# Force Python à envoyer la sortie immédiatement (pour le débogage)
+export PYTHONUNBUFFERED=1
 
-# Fichier de log pour diagnostiquer un éventuel problème de lancement
+# Fichiers de log pour diagnostiquer un éventuel problème de lancement
 LOG_FILE="$DIR/launch_debug.log"
+APP_LOG="$DIR/app_launch.log"
 {
   echo "===== Lancement $(date) ====="
   echo "DIR=$DIR"
   echo "PYTHON=$PYTHON"
   echo "VIRTUAL_ENV=$VIRTUAL_ENV"
-  echo "PYTHONINSPECT=$PYTHONINSPECT"
-  echo "PYTHONSTARTUP=$PYTHONSTARTUP"
 } >> "$LOG_FILE" 2>&1
 
-# Lancement de l'application Streamlit avec le bon interpréteur
-exec "$PYTHON" -m streamlit run app.py >> "$LOG_FILE" 2>&1
+# Lancement de l'application Streamlit - affichage dans le terminal ET copie dans le log
+echo ""
+echo "Lancement de Streamlit..."
+echo "Logs : launch_debug.log et app_launch.log"
+echo "Patientez 10-30 secondes, puis ouvrez http://localhost:8501"
+echo ""
+# -u = sortie Python non bufferisée (messages visibles immédiatement)
+"$PYTHON" -u -m streamlit run app.py --logger.level=debug 2>&1 | tee -a "$LOG_FILE"
