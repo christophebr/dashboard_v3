@@ -542,7 +542,30 @@ def graph_activite(df_support):
 
     return fig
 
-def evo_appels_ticket(df_ticket, df_support):
+def _evo_appels_ticket_trend_from_total(total: pd.Series, rolling_weeks: int = 5, winsorize_iqr: bool = True):
+    """
+    Tendance sur le volume hebdo total (appels + tickets) : winsorisation IQR puis moyenne mobile centrée.
+    Retourne (série tendance alignée sur total, masque booléen semaines atypiques, fenêtre effective impaire).
+    """
+    s = total.astype(float).reset_index(drop=True)
+    adj = s.copy()
+    outlier_mask = np.zeros(len(s), dtype=bool)
+    if len(s) >= 4:
+        q1, q3 = float(s.quantile(0.25)), float(s.quantile(0.75))
+        iqr = q3 - q1
+        if iqr > 0:
+            lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+            outlier_mask = ((s < lo) | (s > hi)).to_numpy(dtype=bool)
+            if winsorize_iqr:
+                adj = s.clip(lower=lo, upper=hi)
+    w = max(3, int(rolling_weeks))
+    if w % 2 == 0:
+        w += 1
+    trend = adj.rolling(window=w, min_periods=1, center=True).mean()
+    return trend, outlier_mask, w
+
+
+def evo_appels_ticket(df_ticket, df_support, add_trend_line=False, rolling_weeks=5, winsorize_iqr_for_trend=True):
     # Exclure la semaine S2024-01 qui fausse les graphiques
     df_ticket = df_ticket[df_ticket['Semaine'] != 'S2024-01'].copy()
     df_support = df_support[df_support['Semaine'] != 'S2024-01'].copy()
@@ -576,8 +599,28 @@ def evo_appels_ticket(df_ticket, df_support):
     df_merged['Semaine'] = pd.Categorical(df_merged['Semaine'], categories=ordre_semaines, ordered=True)
     df_merged.sort_values('Semaine', inplace=True)
 
-    # Création du graphique en aires empilées
-    fig = go.Figure()
+    # Taux de service par semaine (même logique que graph_activite : Entrant_connect / Entrant agrégés)
+    has_taux_cols = (
+        not df_support_inbound.empty
+        and 'Entrant' in df_support_inbound.columns
+        and 'Entrant_connect' in df_support_inbound.columns
+    )
+    if has_taux_cols:
+        tg = df_support_inbound.groupby('Semaine', as_index=False).agg(
+            Entrant_sum=('Entrant', 'sum'),
+            Entrant_connect_sum=('Entrant_connect', 'sum'),
+        )
+        tg['taux_service_hebdo'] = np.where(
+            tg['Entrant_sum'] > 0,
+            tg['Entrant_connect_sum'] / tg['Entrant_sum'],
+            np.nan,
+        )
+        df_merged = df_merged.merge(tg[['Semaine', 'taux_service_hebdo']], on='Semaine', how='left')
+    else:
+        df_merged['taux_service_hebdo'] = np.nan
+
+    # Aire empilée (volumes) + taux de service sur axe secondaire (%)
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     fig.add_trace(go.Scatter(
         x=df_merged['Semaine'],
@@ -586,7 +629,7 @@ def evo_appels_ticket(df_ticket, df_support):
         name='Appels entrants',
         stackgroup='one',
         line=dict(color='lightblue')
-    ))
+    ), secondary_y=False)
 
     fig.add_trace(go.Scatter(
         x=df_merged['Semaine'],
@@ -595,16 +638,61 @@ def evo_appels_ticket(df_ticket, df_support):
         name='Tickets',
         stackgroup='one',
         line=dict(color='indianred')
-    ))
+    ), secondary_y=False)
+
+    title_evo = "Évolution hebdomadaire : Appels entrants + Tickets (aire empilée)"
+    if add_trend_line:
+        total_vol = df_merged['Entrant'].astype(float) + df_merged['Nb_Tickets'].astype(float)
+        trend_vals, outlier_mask, w_eff = _evo_appels_ticket_trend_from_total(
+            total_vol, rolling_weeks=rolling_weeks, winsorize_iqr=winsorize_iqr_for_trend
+        )
+        fig.add_trace(go.Scatter(
+            x=df_merged['Semaine'],
+            y=trend_vals,
+            mode='lines',
+            name=f'Tendance (MM{w_eff}, volumes winsorisés IQR)',
+            line=dict(color='#f1c40f', width=3, dash='dash'),
+        ), secondary_y=False)
+        if outlier_mask.any():
+            semaines = df_merged['Semaine'].astype(str).values
+            tot = total_vol.values
+            fig.add_trace(go.Scatter(
+                x=semaines[outlier_mask],
+                y=tot[outlier_mask],
+                mode='markers',
+                name='Semaine atypique (hors IQR)',
+                marker=dict(symbol='diamond', size=11, color='#e67e22', line=dict(width=1, color='white')),
+            ), secondary_y=False)
+        title_evo += " — tendance & pics"
+
+    if has_taux_cols and df_merged['taux_service_hebdo'].notna().any():
+        title_evo += " & taux de service"
+        fig.add_trace(go.Bar(
+            x=df_merged['Semaine'],
+            y=df_merged['taux_service_hebdo'],
+            name='Taux de service',
+            opacity=0.4,
+            marker_color='#2ecc71',
+            text=[f"{100 * float(v):.0f}%" if pd.notna(v) else "" for v in df_merged['taux_service_hebdo']],
+            textposition='outside',
+            hovertemplate='Taux de service : %{y:.1%}<extra></extra>',
+        ), secondary_y=True)
 
     fig.update_layout(
-        title="Évolution hebdomadaire : Appels entrants + Tickets (aire empilée)",
+        title=title_evo,
         xaxis_title="Semaine",
-        yaxis_title="Volume total",
         xaxis_tickangle=-45,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        hovermode="x unified"
+        hovermode="x unified",
     )
+    fig.update_yaxes(title_text="Volume (appels + tickets)", secondary_y=False)
+    if has_taux_cols and df_merged['taux_service_hebdo'].notna().any():
+        fig.update_yaxes(
+            title_text="Taux de service",
+            range=[0, 1.05],
+            tickformat='.0%',
+            secondary_y=True,
+        )
 
     return fig, activite_appels, activite_tickets, ticket_s17
 

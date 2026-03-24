@@ -939,12 +939,25 @@ elif authentification_status:
                         except Exception as e:
                             st.error(f"Erreur : {e}")
                 
-                st.plotly_chart(kpis['evo_appels_tickets'])
+                st.markdown("#### Évolution hebdomadaire : appels entrants + tickets")
+                show_trend_evo_stellair = st.checkbox(
+                    "Afficher tendance lissée (moyenne mobile sur le volume total, winsorisation IQR) et marquer les semaines atypiques",
+                    value=False,
+                    key="evo_trend_stellair",
+                )
+                if show_trend_evo_stellair:
+                    w_roll = st.slider("Fenêtre moyenne mobile (semaines)", min_value=3, max_value=9, value=5, step=2, key="evo_trend_window_stellair")
+                    fig_evo_hebdo_stellair, _, _, _ = evo_appels_ticket(
+                        df_tickets_periode, df_support, add_trend_line=True, rolling_weeks=w_roll
+                    )
+                else:
+                    fig_evo_hebdo_stellair = kpis['evo_appels_tickets']
+                st.plotly_chart(fig_evo_hebdo_stellair, use_container_width=True)
                 col1, col2 = st.columns([3, 1])
                 with col2:
                     if st.button("📊 Exporter évolution hebdomadaire en PowerPoint", key="btn_evo_appels_tickets_hebdo"):
                         try:
-                            pptx_io = create_single_graph_powerpoint(kpis['evo_appels_tickets'], "Évolution hebdomadaire : appels entrants + tickets", periode_str)
+                            pptx_io = create_single_graph_powerpoint(fig_evo_hebdo_stellair, "Évolution hebdomadaire : appels entrants + tickets", periode_str)
                             st.download_button(
                                 label="📥 Télécharger",
                                 data=pptx_io,
@@ -1101,12 +1114,25 @@ elif authentification_status:
                         except Exception as e:
                             st.error(f"Erreur : {e}")
                 
-                st.plotly_chart(kpis['evo_appels_tickets'])
+                st.markdown("#### Évolution hebdomadaire : appels entrants + tickets")
+                show_trend_evo_affid = st.checkbox(
+                    "Afficher tendance lissée (moyenne mobile sur le volume total, winsorisation IQR) et marquer les semaines atypiques",
+                    value=False,
+                    key="evo_trend_affid",
+                )
+                if show_trend_evo_affid:
+                    w_roll_af = st.slider("Fenêtre moyenne mobile (semaines)", min_value=3, max_value=9, value=5, step=2, key="evo_trend_window_affid")
+                    fig_evo_hebdo_affid, _, _, _ = evo_appels_ticket(
+                        df_tickets_periode, df_support, add_trend_line=True, rolling_weeks=w_roll_af
+                    )
+                else:
+                    fig_evo_hebdo_affid = kpis['evo_appels_tickets']
+                st.plotly_chart(fig_evo_hebdo_affid, use_container_width=True)
                 col1, col2 = st.columns([3, 1])
                 with col2:
                     if st.button("📊 Exporter évolution hebdomadaire en PowerPoint", key="btn_evo_appels_tickets_affid_hebdo"):
                         try:
-                            pptx_io = create_single_graph_powerpoint(kpis['evo_appels_tickets'], "Évolution hebdomadaire : appels entrants + tickets Affid", periode_str)
+                            pptx_io = create_single_graph_powerpoint(fig_evo_hebdo_affid, "Évolution hebdomadaire : appels entrants + tickets Affid", periode_str)
                             st.download_button(
                                 label="📥 Télécharger",
                                 data=pptx_io,
@@ -1135,7 +1161,7 @@ elif authentification_status:
                 with col2:
                     if st.button("📊 Exporter en PowerPoint", key="btn_evo_appels_tickets_affid"):
                         try:
-                            pptx_io = create_single_graph_powerpoint(kpis['evo_appels_tickets'], "Évolution appels/tickets Affid", periode_str)
+                            pptx_io = create_single_graph_powerpoint(fig_evo_hebdo_affid, "Évolution appels/tickets Affid", periode_str)
                             st.download_button(
                                 label="📥 Télécharger",
                                 data=pptx_io,
