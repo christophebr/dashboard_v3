@@ -69,7 +69,7 @@ except Exception as e:
 try:
     _log_step("Import hubspot_processing, kpi_generation...")
     from data_processing.hubspot_processing import process_hubspot_data, load_hubspot_data
-    from data_processing.kpi_generation import generate_kpis, filtrer_par_periode, calculate_ticket_response_time, graph_activite, evo_appels_ticket, graph_charge_affid_stellair, graph_repartition_groupes_stellair, graph_yelda_evaluation, graph_yelda_evaluation_intentions, graph_yelda_interactions_tickets_semaine, graph_yelda_score_llm, graph_yelda_evolution_scores, compute_concentration_metrics_stellair, graph_concentration_stellair, graph_concentration_histogram_stellair, get_top_clients_stellair
+    from data_processing.kpi_generation import generate_kpis, filtrer_par_periode, calculate_ticket_response_time, graph_activite, evo_appels_ticket, graph_charge_affid_stellair, graph_repartition_groupes_stellair, graph_yelda_evaluation, graph_yelda_evaluation_intentions, graph_yelda_interactions_tickets_semaine, graph_yelda_score_llm, graph_yelda_evolution_scores, graph_yelda_evolution_taux_satisfaction, compute_concentration_metrics_stellair, graph_concentration_stellair, graph_concentration_histogram_stellair, get_top_clients_stellair
     _log_step("hubspot, kpi_generation OK")
 except Exception as e:
     _startup_log.exception("ERREUR import hubspot/kpi_generation")
@@ -736,6 +736,8 @@ elif authentification_status:
                         col_c.metric("➖ Sans avis", nb_intent_sans_avis)
                         col_d.metric("Taux satisfaction utilisateurs*", f"{taux_intent}%")
                         st.caption("*Taux satisfaction = Satisfaisant / (Satisfaisant + Non satisfaisant) — Sans avis = conversations évaluées sans intention déclarée")
+                        st.markdown("### Évolution hebdomadaire des taux de satisfaction (LLM et utilisateurs)")
+                        st.plotly_chart(graph_yelda_evolution_taux_satisfaction(df_yelda_eval), use_container_width=True)
                         st.plotly_chart(graph_yelda_evaluation(kpis_yelda['evaluation_counts']), use_container_width=True)
                         st.plotly_chart(graph_yelda_evaluation_intentions(nb_intent_sat, nb_intent_non, nb_intent_sans_avis), use_container_width=True)
                         st.plotly_chart(graph_yelda_interactions_tickets_semaine(df_yelda_eval), use_container_width=True)

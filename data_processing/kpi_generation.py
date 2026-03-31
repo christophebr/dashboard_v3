@@ -2933,6 +2933,47 @@ def _filter_yelda_weeks_main_block(weeks_with_counts, gap_threshold=3, min_count
     return set(keep)
 
 
+def _yelda_weekly_scores_and_satisfaction(df_yelda):
+    """
+    Agrège par semaine ISO : score LLM moyen, taux satisfaction LLM (préfère « Évaluation LLM »),
+    taux satisfaction utilisateurs (Intentions). Applique le filtre de semaines « bloc principal ».
+    Retourne un DataFrame trié ou vide.
+    """
+    if df_yelda is None or df_yelda.empty:
+        return pd.DataFrame()
+    df = df_yelda.copy()
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Semaine'] = df['Date'].dt.isocalendar().year.astype(str) + '-S' + df['Date'].dt.isocalendar().week.astype(str).str.zfill(2)
+    eval_col = 'Évaluation LLM' if 'Évaluation LLM' in df.columns else ('Évaluation' if 'Évaluation' in df.columns else None)
+    intentions_col = 'Intentions' if 'Intentions' in df.columns else None
+    score_col = 'Score LLM' if 'Score LLM' in df.columns else None
+    weekly_list = []
+    for sem, grp in df.groupby('Semaine'):
+        row = {'Semaine': sem}
+        if score_col:
+            vals = grp['Score LLM'].dropna()
+            row['score_llm_moyen'] = vals.mean() if len(vals) > 0 else np.nan
+        if eval_col:
+            s = grp[eval_col].fillna('').astype(str).str.lower()
+            sat = ((s.str.contains('satisfait')) & (~s.str.contains('insatisfait'))).sum()
+            tot = (s.str.contains('satisfait') | s.str.contains('insatisfait') | s.str.contains('revoir')).sum()
+            row['taux_satisfaction_llm'] = 100 * sat / tot if tot > 0 else np.nan
+        if intentions_col:
+            intents = grp[intentions_col].fillna('').astype(str).str.lower()
+            has_non = intents.str.contains('reponse_agent_non_satisfaisante', na=False)
+            has_sat = intents.str.contains('reponse_agent_satisfaisante', na=False) & ~has_non
+            satisfaisant = has_sat.sum()
+            non_satisfaisant = has_non.sum()
+            tot_intentions = satisfaisant + non_satisfaisant
+            row['taux_satisfaction_utilisateurs'] = 100 * satisfaisant / tot_intentions if tot_intentions > 0 else np.nan
+        weekly_list.append(row)
+    weekly_data = pd.DataFrame(weekly_list).sort_values('Semaine')
+    counts_by_week = df.groupby('Semaine').size()
+    weeks_ok = _filter_yelda_weeks_main_block(counts_by_week, gap_threshold=3, min_count=5)
+    weekly_data = weekly_data[weekly_data['Semaine'].isin(weeks_ok)].sort_values('Semaine')
+    return weekly_data
+
+
 def graph_yelda_evaluation_intentions(intentions_satisfaisant, intentions_non_satisfaisant, intentions_sans_avis=0):
     """Graphique camembert : répartition utilisateur satisfait / non satisfait / sans avis (Intentions)."""
     if intentions_satisfaisant == 0 and intentions_non_satisfaisant == 0 and intentions_sans_avis == 0:
@@ -3042,7 +3083,7 @@ def graph_yelda_evolution_scores(df_yelda):
     """
     Graphique : évolution dans le temps (par semaine) de :
     - Score LLM moyen
-    - Taux satisfaction (évaluation LLM - colonne Évaluation)
+    - Taux satisfaction LLM (colonne « Évaluation LLM » si présente, sinon « Évaluation »)
     - Taux satisfaction utilisateurs (colonne Intentions : reponse_agent_satisfaisante vs non_satisfaisante)
     """
     if df_yelda is None or df_yelda.empty:
@@ -3050,37 +3091,15 @@ def graph_yelda_evolution_scores(df_yelda):
         fig.add_annotation(text="Aucune donnée", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
         fig.update_layout(template="plotly_dark")
         return fig
-    df = df_yelda.copy()
-    df['Date'] = pd.to_datetime(df['Date'])
-    df['Semaine'] = df['Date'].dt.isocalendar().year.astype(str) + '-S' + df['Date'].dt.isocalendar().week.astype(str).str.zfill(2)
-    eval_col = 'Évaluation' if 'Évaluation' in df.columns else None
-    intentions_col = 'Intentions' if 'Intentions' in df.columns else None
-    score_col = 'Score LLM' if 'Score LLM' in df.columns else None
-    weekly_list = []
-    for sem, grp in df.groupby('Semaine'):
-        row = {'Semaine': sem}
-        if score_col:
-            vals = grp['Score LLM'].dropna()
-            row['score_llm_moyen'] = vals.mean() if len(vals) > 0 else np.nan
-        if eval_col:
-            s = grp[eval_col].fillna('').astype(str).str.lower()
-            sat = ((s.str.contains('satisfait')) & (~s.str.contains('insatisfait'))).sum()
-            tot = (s.str.contains('satisfait') | s.str.contains('insatisfait') | s.str.contains('revoir')).sum()
-            row['taux_satisfaction_llm'] = 100 * sat / tot if tot > 0 else np.nan
-        if intentions_col:
-            intents = grp[intentions_col].fillna('').astype(str).str.lower()
-            has_non = intents.str.contains('reponse_agent_non_satisfaisante', na=False)
-            has_sat = intents.str.contains('reponse_agent_satisfaisante', na=False) & ~has_non
-            satisfaisant = has_sat.sum()
-            non_satisfaisant = has_non.sum()
-            tot_intentions = satisfaisant + non_satisfaisant
-            row['taux_satisfaction_utilisateurs'] = 100 * satisfaisant / tot_intentions if tot_intentions > 0 else np.nan
-        weekly_list.append(row)
-    weekly_data = pd.DataFrame(weekly_list).sort_values('Semaine')
-    # Restreindre au bloc principal (éviter semaines 14-36 quand les conversations s'arrêtent à la semaine 12)
-    counts_by_week = df.groupby('Semaine').size()
-    weeks_ok = _filter_yelda_weeks_main_block(counts_by_week, gap_threshold=3, min_count=5)
-    weekly_data = weekly_data[weekly_data['Semaine'].isin(weeks_ok)].sort_values('Semaine')
+    weekly_data = _yelda_weekly_scores_and_satisfaction(df_yelda)
+    if weekly_data.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="Aucune donnée hebdomadaire", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        fig.update_layout(template="plotly_dark", title="Yelda : Évolution des scores et des évaluations dans le temps")
+        return fig
+    score_col = 'Score LLM' if 'Score LLM' in df_yelda.columns else None
+    eval_col = 'Évaluation LLM' if 'Évaluation LLM' in df_yelda.columns else ('Évaluation' if 'Évaluation' in df_yelda.columns else None)
+    intentions_col = 'Intentions' if 'Intentions' in df_yelda.columns else None
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     if score_col and 'score_llm_moyen' in weekly_data.columns and weekly_data['score_llm_moyen'].notna().any():
         fig.add_trace(
@@ -3125,6 +3144,59 @@ def graph_yelda_evolution_scores(df_yelda):
     )
     fig.update_yaxes(title_text="Score LLM moyen", range=[1, 5], secondary_y=False)
     fig.update_yaxes(title_text="Taux satisfaction (%)", secondary_y=True)
+    return fig
+
+
+def graph_yelda_evolution_taux_satisfaction(df_yelda):
+    """
+    Évolution semaine par semaine (ISO) des deux taux de satisfaction en % sur un même axe :
+    - Taux satisfaction LLM (Évaluation LLM ou Évaluation)
+    - Taux satisfaction utilisateurs (Intentions)
+    """
+    if df_yelda is None or df_yelda.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="Aucune donnée", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        fig.update_layout(template="plotly_dark")
+        return fig
+    weekly_data = _yelda_weekly_scores_and_satisfaction(df_yelda)
+    if weekly_data.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="Aucune donnée hebdomadaire", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        fig.update_layout(template="plotly_dark")
+        return fig
+    fig = go.Figure()
+    if 'taux_satisfaction_llm' in weekly_data.columns and weekly_data['taux_satisfaction_llm'].notna().any():
+        fig.add_trace(
+            go.Scatter(
+                x=weekly_data['Semaine'],
+                y=weekly_data['taux_satisfaction_llm'],
+                name="Taux satisfaction LLM (éval.)",
+                mode='lines+markers',
+                line=dict(color='#2ecc71', width=3),
+                marker=dict(size=8),
+            )
+        )
+    if 'taux_satisfaction_utilisateurs' in weekly_data.columns and weekly_data['taux_satisfaction_utilisateurs'].notna().any():
+        fig.add_trace(
+            go.Scatter(
+                x=weekly_data['Semaine'],
+                y=weekly_data['taux_satisfaction_utilisateurs'],
+                name="Taux satisfaction utilisateurs (Intentions)",
+                mode='lines+markers',
+                line=dict(color='#3498db', width=3),
+                marker=dict(size=8, symbol='diamond'),
+            )
+        )
+    if len(fig.data) == 0:
+        fig.add_annotation(text="Aucun taux calculable par semaine", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+    fig.update_layout(
+        title="Yelda : Évolution des taux de satisfaction (par semaine ISO)",
+        template="plotly_dark",
+        xaxis=dict(tickangle=-45, title="Semaine"),
+        yaxis=dict(title="Taux (%)", range=[0, 100]),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        hovermode="x unified",
+    )
     return fig
 
 
