@@ -18,7 +18,44 @@ COL_SCORE_LLM = 'Score LLM'
 COL_DATE = 'Date'
 COL_ID_CONV = 'identifiant de la conversation'
 COL_INTENTIONS = 'Intentions'
+COL_HUBSPOT_CONTACT_ID = 'Persistant slot - hubspot_id_slot'
 URL_FILTER_PREFIX = 'https://fse.stellair.fr'
+
+
+def normalize_yelda_hubspot_contact_id(val):
+    """
+    Normalise l'ID contact HubSpot (slot Yelda) pour déduplication.
+    Retourne une chaîne de chiffres ou None.
+    """
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None
+    s = str(val).strip()
+    if not s or s.lower() == 'nan':
+        return None
+    if s.endswith('.0') and s[:-2].isdigit():
+        s = s[:-2]
+    return s if s.isdigit() else None
+
+
+def compute_yelda_utilisateurs_hubspot_metrics(df_yelda):
+    """
+    Utilisateurs distincts identifiés par ID HubSpot (slot), sur le jeu filtré fourni
+    (ex. conversations évaluées, période).
+
+    Returns:
+        dict: nb_utilisateurs_uniques, nb_utilisateurs_2plus_conversations
+    """
+    z = {'nb_utilisateurs_uniques': 0, 'nb_utilisateurs_2plus_conversations': 0}
+    if df_yelda is None or df_yelda.empty or COL_HUBSPOT_CONTACT_ID not in df_yelda.columns:
+        return z
+    s = df_yelda[COL_HUBSPOT_CONTACT_ID].map(normalize_yelda_hubspot_contact_id)
+    valid = s.dropna()
+    if valid.empty:
+        return z
+    z['nb_utilisateurs_uniques'] = int(valid.nunique())
+    vc = valid.value_counts()
+    z['nb_utilisateurs_2plus_conversations'] = int((vc >= 2).sum())
+    return z
 
 
 def load_yelda_data(path=None):

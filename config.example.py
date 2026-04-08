@@ -18,6 +18,9 @@ AIRCALL_DATA_PATH_V1 = os.getenv('AIRCALL_DATA_PATH_V1', 'data/Affid/Aircall/dat
 AIRCALL_DATA_PATH_V2 = os.getenv('AIRCALL_DATA_PATH_V2', 'data/Affid/Aircall/data_v2')
 AIRCALL_DATA_PATH_V3 = os.getenv('AIRCALL_DATA_PATH_V3', 'data/Affid/Aircall/data_v3')
 HUBSPOT_TICKET_DATA_PATH = os.getenv('HUBSPOT_TICKET_PATH', 'data/Affid/Hubspot/ticket')
+HUBSPOT_CONTACTS_PATH = os.getenv(
+    'HUBSPOT_CONTACTS_PATH', 'data/Affid/Hubspot/contacts'
+)
 HUBSPOT_AGENT_DATA_PATH = os.getenv('HUBSPOT_AGENT_PATH', 'data/Affid/Hubspot/agent')
 EVALUATION_DATA_PATH = os.getenv('EVALUATION_DATA_PATH', 'data/Affid/Evaluation/support_notes_filtered.xlsx')
 YELDA_DATA_PATH = os.getenv('YELDA_DATA_PATH', 'data/Affid/yelda/yelda.xlsx')

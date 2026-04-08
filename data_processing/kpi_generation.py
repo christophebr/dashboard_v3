@@ -2903,6 +2903,37 @@ def graph_tickets_n1_par_semaine_stellair(df_tickets, agent_filter=None, weeks_t
 
 
 # --- Graphiques Yelda (chatbot Stellair) ---
+def _yelda_yaxis_range_and_dtick(ymax, top_pad=0.22, target_ticks=6):
+    """
+    Un seul axe Y : plage [0, y_top] avec marge haute, et pas de graduation espacé
+    (évite un tracé « trop plat » quand les valeurs sont proches du max).
+    """
+    import math
+
+    if ymax <= 0:
+        ymax = 1.0
+    y_span = ymax * (1.0 + top_pad)
+    raw = y_span / max(target_ticks, 1)
+    if raw <= 0:
+        dtick = 1.0
+    else:
+        exp = math.floor(math.log10(raw))
+        f = raw / (10 ** exp)
+        if f < 1.5:
+            nf = 1
+        elif f < 3.5:
+            nf = 2
+        elif f < 7.5:
+            nf = 5
+        else:
+            nf = 10
+        dtick = float(nf * (10 ** exp))
+    y_top = math.ceil(y_span / dtick) * dtick
+    if y_top < y_span:
+        y_top += dtick
+    return [0.0, y_top], dtick
+
+
 def _filter_yelda_weeks_main_block(weeks_with_counts, gap_threshold=3, min_count=5):
     """
     Restreint les semaines au bloc principal (contigu depuis le début).
@@ -3014,10 +3045,14 @@ def graph_yelda_evaluation(evaluation_counts):
     return fig
 
 
-def graph_yelda_interactions_tickets_semaine(df_yelda):
+def graph_yelda_interactions_tickets_semaine(df_yelda, df_cross=None):
     """
-    Graphique : interactions et tickets créés par semaine.
-    df_yelda doit avoir colonnes Date, Parcours (avec 'creation_ticket_hubspot' pour les tickets).
+    Si ``df_cross`` est fourni : **barres groupées** « Conversations » et « Clients uniques (ID HubSpot) »
+    par semaine, plus deux courbes (tickets) sur le **même axe Y**.
+
+    df_yelda : volume hebdo de conversations + filtre de semaines (bloc principal).
+    df_cross : tableau croisé par conversation évaluée (colonnes Date, ticket_creation_parcours_yelda,
+    nb_tickets_fenetre_attribues_cette_session, nb_tickets_fenetre).
     """
     if df_yelda is None or df_yelda.empty:
         fig = go.Figure()
@@ -3027,32 +3062,149 @@ def graph_yelda_interactions_tickets_semaine(df_yelda):
     df = df_yelda.copy()
     df['Date'] = pd.to_datetime(df['Date'])
     df['Semaine'] = df['Date'].dt.isocalendar().year.astype(str) + '-S' + df['Date'].dt.isocalendar().week.astype(str).str.zfill(2)
+    weekly = df.groupby('Semaine').agg(interactions=('Semaine', 'count')).reset_index()
+    weeks_ok = _filter_yelda_weeks_main_block(weekly.set_index('Semaine')['interactions'], gap_threshold=3, min_count=5)
+
+    need_cols = {'ticket_creation_parcours_yelda', 'nb_tickets_fenetre_attribues_cette_session', 'nb_tickets_fenetre', 'Date'}
+    if (
+        df_cross is not None
+        and not df_cross.empty
+        and need_cols.issubset(set(df_cross.columns))
+    ):
+        dfc = df_cross.copy()
+        dfc['Date'] = pd.to_datetime(dfc['Date'], errors='coerce')
+        dfc = dfc[dfc['Date'].notna()]
+        if dfc.empty:
+            fig = go.Figure()
+            fig.add_annotation(text="Dates croisement manquantes", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+            fig.update_layout(template="plotly_dark")
+            return fig
+        parc = dfc['ticket_creation_parcours_yelda'].fillna(False).astype(bool)
+        att = dfc['nb_tickets_fenetre_attribues_cette_session'].fillna(0).astype(float)
+        ntot = dfc['nb_tickets_fenetre'].fillna(0).astype(float)
+        dfc['_tickets_avec_yelda'] = np.where(parc, att, 0.0)
+        dfc['Semaine'] = dfc['Date'].dt.isocalendar().year.astype(str) + '-S' + dfc['Date'].dt.isocalendar().week.astype(str).str.zfill(2)
+        w24 = dfc.groupby('Semaine', as_index=False).agg(
+            tickets_avec_yelda=('_tickets_avec_yelda', 'sum'),
+            tickets_total_f24h=('nb_tickets_fenetre', 'sum'),
+        )
+        w24 = w24[w24['Semaine'].isin(weeks_ok)].sort_values('Semaine')
+        if w24.empty:
+            fig = go.Figure()
+            fig.add_annotation(text="Aucune semaine après filtre", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+            fig.update_layout(template="plotly_dark")
+            return fig
+        weekly_plot = weekly[weekly['Semaine'].isin(weeks_ok)].sort_values('Semaine')
+        from data_processing.yelda_processing import COL_HUBSPOT_CONTACT_ID, normalize_yelda_hubspot_contact_id
+
+        if COL_HUBSPOT_CONTACT_ID in df.columns:
+            df_u = df.copy()
+            df_u['_hid'] = df_u[COL_HUBSPOT_CONTACT_ID].map(normalize_yelda_hubspot_contact_id)
+            df_u = df_u[df_u['_hid'].notna()]
+            if not df_u.empty:
+                weekly_u = df_u.groupby('Semaine')['_hid'].nunique().reset_index(name='clients_uniques')
+                weekly_merged = weekly_plot.merge(weekly_u, on='Semaine', how='left')
+            else:
+                weekly_merged = weekly_plot.copy()
+                weekly_merged['clients_uniques'] = 0.0
+        else:
+            weekly_merged = weekly_plot.copy()
+            weekly_merged['clients_uniques'] = 0.0
+        weekly_merged['clients_uniques'] = weekly_merged['clients_uniques'].fillna(0).astype(float)
+
+        all_y = np.concatenate(
+            [
+                weekly_merged['interactions'].astype(float).values,
+                weekly_merged['clients_uniques'].astype(float).values,
+                w24['tickets_avec_yelda'].astype(float).values,
+                w24['tickets_total_f24h'].astype(float).values,
+            ]
+        )
+        ymax = float(np.nanmax(all_y)) if len(all_y) else 1.0
+        y_range, dtick = _yelda_yaxis_range_and_dtick(ymax, top_pad=0.22, target_ticks=6)
+        fig = go.Figure()
+        fig.add_trace(
+            go.Bar(
+                x=weekly_merged['Semaine'],
+                y=weekly_merged['interactions'],
+                name="Conversations",
+                marker_color='#9b59b6',
+            )
+        )
+        fig.add_trace(
+            go.Bar(
+                x=weekly_merged['Semaine'],
+                y=weekly_merged['clients_uniques'],
+                name="Clients uniques (ID HubSpot)",
+                marker_color='#1abc9c',
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=w24['Semaine'],
+                y=w24['tickets_avec_yelda'],
+                name="Tickets créés avec Yelda",
+                mode='lines+markers',
+                line=dict(color='#2ecc71', width=3),
+                marker=dict(size=8),
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=w24['Semaine'],
+                y=w24['tickets_total_f24h'],
+                name="Total tickets fenêtre 24 h (Yelda + autres)",
+                mode='lines+markers',
+                line=dict(color='#3498db', width=3),
+                marker=dict(size=8, symbol='diamond'),
+            )
+        )
+        fig.update_layout(
+            title="Yelda : conversations, clients uniques, tickets créés avec Yelda et total fenêtre 24 h par semaine",
+            template="plotly_dark",
+            xaxis=dict(tickangle=-45),
+            barmode='group',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis=dict(
+                title="Nombre (conversations, clients, tickets)",
+                range=y_range,
+                dtick=dtick,
+            ),
+        )
+        return fig
+
+    # Fallback sans croisement : barres interactions + parcours (comportement historique réduit)
     parcours_col = 'Parcours' if 'Parcours' in df.columns else df.columns[0]
     df['Ticket créé'] = df[parcours_col].fillna('').astype(str).str.contains('creation_ticket_hubspot', regex=False)
-    weekly = df.groupby('Semaine').agg(
+    weekly2 = df.groupby('Semaine').agg(
         interactions=('Semaine', 'count'),
-        tickets_crees=('Ticket créé', 'sum')
+        tickets_crees=('Ticket créé', 'sum'),
     ).reset_index()
-    # Restreindre au bloc principal (éviter semaines 14-36 quand les conversations s'arrêtent à la semaine 12)
-    weeks_ok = _filter_yelda_weeks_main_block(weekly.set_index('Semaine')['interactions'], gap_threshold=3, min_count=5)
-    weekly = weekly[weekly['Semaine'].isin(weeks_ok)].sort_values('Semaine')
+    weekly2 = weekly2[weekly2['Semaine'].isin(weeks_ok)].sort_values('Semaine')
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
-        go.Bar(x=weekly['Semaine'], y=weekly['interactions'], name="Interactions", marker_color='#3498db'),
-        secondary_y=False
+        go.Bar(x=weekly2['Semaine'], y=weekly2['interactions'], name="Interactions", marker_color='#3498db'),
+        secondary_y=False,
     )
     fig.add_trace(
-        go.Scatter(x=weekly['Semaine'], y=weekly['tickets_crees'], name="Tickets créés", mode='lines+markers', line=dict(color='#e74c3c', width=3)),
-        secondary_y=True
+        go.Scatter(
+            x=weekly2['Semaine'],
+            y=weekly2['tickets_crees'],
+            name="Conversations avec parcours création ticket",
+            mode='lines+markers',
+            line=dict(color='#e74c3c', width=3),
+        ),
+        secondary_y=True,
     )
     fig.update_layout(
-        title="Yelda : Conversations évaluées et tickets créés par semaine",
+        title="Yelda : conversations et parcours création ticket (croisement HubSpot indisponible)",
         template="plotly_dark",
         xaxis=dict(tickangle=-45),
-        barmode='group'
+        barmode='group',
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
     fig.update_yaxes(title_text="Nombre d'interactions", secondary_y=False)
-    fig.update_yaxes(title_text="Tickets créés", secondary_y=True)
+    fig.update_yaxes(title_text="Conversations (parcours)", secondary_y=True)
     return fig
 
 
