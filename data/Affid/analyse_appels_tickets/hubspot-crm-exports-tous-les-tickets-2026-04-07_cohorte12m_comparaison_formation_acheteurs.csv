@@ -1,0 +1,2 @@
+﻿fichier_transactions_formation,nb_clients_cohorte_12m,nb_avec_formation_filtre_gagne,nb_sans_formation,moyenne_tickets_support_par_client_apres_sub_avec_formation,moyenne_tickets_support_par_client_apres_sub_sans_formation,ecart_moyenne_sans_moins_avec,note
+hubspot-crm-exports-mes-transactions-2026-04-08.xlsx,1294,23,1271,2.0435,2.0913,0.0478,"Si ecart > 0, la moyenne est plus élevée chez les sans formation (plus demandeurs)."

@@ -1,0 +1,2 @@
+﻿date_fin_donnees_tickets,date_limite_formation_au_plus_tard,min_mois_depuis_formation,fichier_transactions,nb_clients_eligibles,nb_tickets_support_total_apres_formation,moyenne_tickets_par_client,mediane_tickets_par_client,moyenne_tickets_par_mois_calendaire
+2026-04-03 18:54:00,2025-10-03,6,hubspot-crm-exports-mes-transactions-2026-04-08.xlsx,216,320,1.4815,1.0,0.148
