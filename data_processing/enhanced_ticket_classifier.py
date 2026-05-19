@@ -201,4 +201,4 @@ if __name__ == "__main__":
             print(f"❌ Erreur lors du test: {e}")
     else:
         print("\n❌ Aucun modèle enrichi disponible")
-        print("💡 Exécutez 'python train_model_with_definitions.py' pour créer le modèle") 
+        print("💡 Exécutez 'python scripts/ml_obsoletes/train_model_with_definitions.py' pour créer le modèle")

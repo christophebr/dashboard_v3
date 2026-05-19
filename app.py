@@ -87,7 +87,7 @@ except Exception as e:
 try:
     _log_step("Import config...")
     import config
-    from config import CREDENTIALS, AIRCALL_DATA_PATH_V1, AIRCALL_DATA_PATH_V2, AIRCALL_DATA_PATH_V3, HUBSPOT_TICKET_DATA_PATH, EVALUATION_DATA_PATH, YELDA_DATA_PATH, ANALYSE_APPELS_TICKETS_PATH
+    from config import CREDENTIALS, AIRCALL_DATA_PATH_V1, AIRCALL_DATA_PATH_V2, AIRCALL_DATA_PATH_V3, HUBSPOT_TICKET_DATA_PATH, HUBSPOT_CONTACTS_PATH, EVALUATION_DATA_PATH, YELDA_DATA_PATH, ANALYSE_APPELS_TICKETS_PATH, CRM_DATA_PATH
     _log_step("config OK")
 except Exception as e:
     _startup_log.exception("ERREUR import config")
@@ -259,7 +259,7 @@ elif authentification_status:
         cache_keys_to_clear = [
             'df_aircall', 'df_tickets', 'df_evaluation',
             'df_support_processed', 'df_tickets_processed', 'kpis_all',
-            'df_aircall_processed'
+            'df_aircall_processed', 'df_crm'
         ]
         
         # Ajouter les caches des dataframes support
@@ -302,8 +302,9 @@ elif authentification_status:
         st.session_state['df_aircall'] = load_aircall_data(AIRCALL_DATA_PATH_V1, AIRCALL_DATA_PATH_V2, AIRCALL_DATA_PATH_V3, force_reload=True)
         st.session_state['df_tickets'] = load_hubspot_data(HUBSPOT_TICKET_DATA_PATH)
         st.session_state['df_evaluation'] = pd.read_excel(EVALUATION_DATA_PATH)
+        st.session_state['df_crm'] = None  # rechargé à la prochaine visite de la page TMAJ
         st.session_state['data_reload_counter'] = st.session_state.get('data_reload_counter', 0) + 1
-        st.success("✅ Données Aircall, HubSpot, Evaluation, Yelda et analyse qualitative rechargées ! Les caches ont été vidés.")
+        st.success("✅ Données Aircall, HubSpot, Evaluation, Yelda, CRM et analyse qualitative rechargées ! Les caches ont été vidés.")
 
     # Chargement initial si pas déjà en mémoire
     if 'df_aircall' not in st.session_state:
@@ -312,6 +313,9 @@ elif authentification_status:
         st.session_state['df_tickets'] = load_hubspot_data(HUBSPOT_TICKET_DATA_PATH)
     if 'df_evaluation' not in st.session_state:
         st.session_state['df_evaluation'] = pd.read_excel(EVALUATION_DATA_PATH)
+    # CRM TMAJ : chargement à la demande (lecture Excel ~6s), géré dans la page Support TMAJ
+    if 'df_crm' not in st.session_state:
+        st.session_state['df_crm'] = None
 
     df_aircall = st.session_state['df_aircall']
     df_tickets = st.session_state['df_tickets']
@@ -424,6 +428,396 @@ elif authentification_status:
         )
 
 
+        # Environnements CRM proposés dans la section "Incidents CRM par
+        # environnement". L'ordre déclaré ici est respecté côté UI (TMAJ
+        # en premier puisqu'on se trouve sur la page TMAJ).
+        CRM_ENVIRONNEMENTS = (
+            "TMAJ",
+            "PXV3/Vehis",
+            "HELIO/DIAPASON",
+            "STELLAIR",
+            "HELIO-DMP",
+        )
+
+
+        def _render_crm_env_block(df_env_periode, environnement, periode_str, key_suffix):
+            """Affiche les KPI CRM pour un environnement déjà filtré sur la période.
+
+            Sortie : metrics, évolution mensuelle, charge par intervenant
+            (noms normalisés) / par équipe, top clients et familles de
+            sujets. Chaque graphique reçoit un `key` Streamlit unique pour
+            éviter les collisions entre onglets.
+            """
+            from data_processing.crm_processing import (
+                compute_crm_kpis, compute_crm_evolution_mensuelle,
+                compute_crm_par_intervenant_normalise,
+                compute_crm_par_proprietaire, compute_crm_top_clients,
+                compute_crm_categories_sujets,
+            )
+            import plotly.express as px
+
+            if df_env_periode.empty:
+                st.info(f"Aucun incident CRM {environnement} sur la période sélectionnée.")
+                return
+
+            kpis_crm = compute_crm_kpis(df_env_periode)
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric(
+                f"Incidents CRM {environnement}",
+                f"{kpis_crm['total_tickets']:,}".replace(",", " "),
+            )
+            col2.metric(
+                "Clients distincts",
+                f"{kpis_crm['clients_distincts']:,}".replace(",", " "),
+            )
+            col3.metric("Taux de résolution", f"{kpis_crm['taux_resolution_pct']} %")
+            col4.metric("Backlog (actifs)", kpis_crm['tickets_actifs'])
+
+            col5, col6, col7, col8 = st.columns(4)
+            col5.metric("Délai médian", f"{kpis_crm.get('delai_median_jours', 0)} j")
+            col6.metric("Délai p75", f"{kpis_crm.get('delai_p75_jours', 0)} j")
+            col7.metric("Résolus < 24 h", f"{kpis_crm.get('pct_resolus_24h', 0)} %")
+            col8.metric("Suivi requis", kpis_crm['tickets_suivi_requis'])
+
+            # --- Évolution mensuelle --------------------------------------
+            mensuel = compute_crm_evolution_mensuelle(df_env_periode)
+            if not mensuel.empty:
+                df_mensuel = mensuel.reset_index()
+                df_mensuel.columns = ["Mois", "Incidents"]
+                fig_mensuel = px.bar(
+                    df_mensuel, x="Mois", y="Incidents",
+                    title=f"Évolution mensuelle des incidents CRM {environnement} — {periode_str}",
+                    text="Incidents",
+                )
+                fig_mensuel.update_traces(textposition="outside")
+                fig_mensuel.update_layout(showlegend=False, yaxis_title="Nb d'incidents")
+                st.plotly_chart(
+                    fig_mensuel,
+                    use_container_width=True,
+                    key=f"crm_mensuel_{key_suffix}",
+                )
+
+            # --- Charge par intervenant (avec noms réels) -----------------
+            col_left, col_right = st.columns(2)
+            with col_left:
+                st.markdown("#### Charge par intervenant")
+                interv = compute_crm_par_intervenant_normalise(df_env_periode)
+                if interv.empty:
+                    st.caption("Aucun intervenant renseigné sur la période.")
+                else:
+                    df_interv = interv.reset_index()
+                    df_interv.columns = ["Intervenant", "Incidents"]
+                    fig_interv = px.bar(
+                        df_interv, x="Incidents", y="Intervenant",
+                        orientation="h", text="Incidents",
+                    )
+                    fig_interv.update_traces(textposition="outside")
+                    fig_interv.update_layout(
+                        yaxis={"categoryorder": "total ascending"},
+                        height=max(260, 32 * len(df_interv)),
+                        margin=dict(l=10, r=10, t=10, b=10),
+                    )
+                    st.plotly_chart(
+                        fig_interv,
+                        use_container_width=True,
+                        key=f"crm_interv_{key_suffix}",
+                    )
+
+                    if "intervenant_nom" in df_env_periode.columns:
+                        sans_interv = (df_env_periode["intervenant_nom"] == "(non assigné)").sum()
+                        if sans_interv:
+                            st.caption(
+                                f"{sans_interv} incident(s) sans intervenant assigné "
+                                f"({round(sans_interv / len(df_env_periode) * 100, 1)} % du total)."
+                            )
+
+            with col_right:
+                st.markdown("#### Charge par équipe (Propriétaire)")
+                proprio = compute_crm_par_proprietaire(df_env_periode)
+                if not proprio.empty:
+                    df_proprio = proprio.reset_index()
+                    df_proprio.columns = ["Propriétaire", "Incidents"]
+                    fig_proprio = px.bar(
+                        df_proprio, x="Incidents", y="Propriétaire",
+                        orientation="h", text="Incidents",
+                    )
+                    fig_proprio.update_traces(textposition="outside")
+                    fig_proprio.update_layout(
+                        yaxis={"categoryorder": "total ascending"},
+                        height=max(260, 32 * len(df_proprio)),
+                        margin=dict(l=10, r=10, t=10, b=10),
+                    )
+                    st.plotly_chart(
+                        fig_proprio,
+                        use_container_width=True,
+                        key=f"crm_proprio_{key_suffix}",
+                    )
+
+            # --- Top clients & catégories de sujets -----------------------
+            col_clients, col_cat = st.columns(2)
+            with col_clients:
+                st.markdown("#### Top 10 clients")
+                top_clients = compute_crm_top_clients(df_env_periode, n=10)
+                if not top_clients.empty:
+                    df_top = top_clients.reset_index()
+                    df_top.columns = ["Client", "Incidents"]
+                    st.dataframe(df_top, use_container_width=True, hide_index=True)
+
+            with col_cat:
+                st.markdown("#### Familles de sujets")
+                categ = compute_crm_categories_sujets(df_env_periode)
+                if not categ.empty:
+                    df_cat = categ.reset_index()
+                    df_cat.columns = ["Famille", "Incidents"]
+                    fig_cat = px.bar(
+                        df_cat, x="Incidents", y="Famille",
+                        orientation="h", text="Incidents",
+                    )
+                    fig_cat.update_traces(textposition="outside")
+                    fig_cat.update_layout(
+                        yaxis={"categoryorder": "total ascending"},
+                        height=max(260, 32 * len(df_cat)),
+                        margin=dict(l=10, r=10, t=10, b=10),
+                    )
+                    st.plotly_chart(
+                        fig_cat,
+                        use_container_width=True,
+                        key=f"crm_cat_{key_suffix}",
+                    )
+
+
+        def _render_crm_tmaj_section(periode, periode_str):
+            """Affiche les KPI CRM pour TMAJ ainsi qu'un onglet par environnement.
+
+            Le fichier Excel CRM est lu une seule fois et conservé dans
+            `session_state['df_crm']` (lecture paresseuse).
+            """
+            from data_processing.crm_processing import (
+                load_crm_data, process_crm_data,
+                filter_crm_par_environnement, filter_crm_periode,
+            )
+
+            st.markdown("---")
+            st.markdown("### Incidents CRM par environnement")
+
+            try:
+                if st.session_state.get('df_crm') is None:
+                    with st.spinner("Chargement du fichier CRM (incidents)..."):
+                        df_raw = load_crm_data(CRM_DATA_PATH)
+                        st.session_state['df_crm'] = process_crm_data(df_raw)
+                df_crm = st.session_state['df_crm']
+            except FileNotFoundError as exc:
+                st.info(f"📁 Pas encore d'export CRM disponible. {exc}")
+                return
+            except Exception as exc:
+                st.error(f"Erreur lors du chargement du CRM : {exc}")
+                return
+
+            # ----------------------------------------------------------------
+            # Vue d'ensemble (tous secteurs) — metrics + graphique répartition
+            # ----------------------------------------------------------------
+            from data_processing.crm_processing import ENVIRONMENT_TO_TYPE_CONTRAT
+            import plotly.express as px
+
+            try:
+                df_period_all = filter_crm_periode(df_crm, periode=periode)
+            except KeyError:
+                df_period_all = df_crm
+
+            # Comptage par secteur, dans l'ordre `CRM_ENVIRONNEMENTS`
+            counts_par_secteur = []
+            if "Type contrat" in df_period_all.columns:
+                repart = df_period_all["Type contrat"].value_counts()
+                for env in CRM_ENVIRONNEMENTS:
+                    type_contrat = ENVIRONMENT_TO_TYPE_CONTRAT.get(env.upper(), env)
+                    counts_par_secteur.append(
+                        {"Secteur": env, "Incidents": int(repart.get(type_contrat, 0))}
+                    )
+
+            total_all = sum(item["Incidents"] for item in counts_par_secteur)
+
+            # Bandeau de metrics : un par secteur + total
+            cols = st.columns(len(CRM_ENVIRONNEMENTS) + 1)
+            cols[0].metric(
+                "Total incidents",
+                f"{total_all:,}".replace(",", " "),
+                help=f"Sur la période {periode_str}, tous secteurs CRM confondus.",
+            )
+            for col, item in zip(cols[1:], counts_par_secteur):
+                share = round(item["Incidents"] / total_all * 100, 1) if total_all else 0.0
+                col.metric(item["Secteur"], f"{item['Incidents']:,}".replace(",", " "),
+                           delta=f"{share} %", delta_color="off")
+
+            # Graphique de répartition par secteur (camembert) + barres
+            if total_all > 0:
+                col_pie, col_bar = st.columns([1, 1])
+                with col_pie:
+                    df_repart = pd.DataFrame(counts_par_secteur)
+                    df_repart = df_repart[df_repart["Incidents"] > 0]
+                    fig_pie = px.pie(
+                        df_repart, names="Secteur", values="Incidents",
+                        title=f"Répartition par secteur — {periode_str}",
+                        hole=0.4,
+                    )
+                    fig_pie.update_traces(textposition="inside", textinfo="percent+label")
+                    fig_pie.update_layout(
+                        showlegend=True,
+                        margin=dict(l=10, r=10, t=50, b=10),
+                        height=380,
+                    )
+                    st.plotly_chart(fig_pie, use_container_width=True, key="crm_repart_pie")
+
+                with col_bar:
+                    fig_bar = px.bar(
+                        pd.DataFrame(counts_par_secteur),
+                        x="Secteur", y="Incidents",
+                        title=f"Volume d'incidents par secteur — {periode_str}",
+                        text="Incidents",
+                    )
+                    fig_bar.update_traces(textposition="outside")
+                    fig_bar.update_layout(
+                        showlegend=False,
+                        margin=dict(l=10, r=10, t=50, b=10),
+                        height=380,
+                        yaxis_title="Nb d'incidents",
+                    )
+                    st.plotly_chart(fig_bar, use_container_width=True, key="crm_repart_bar")
+
+            # ----------------------------------------------------------------
+            # Évolution mensuelle compilée (tous secteurs, empilée)
+            # ----------------------------------------------------------------
+            if not df_period_all.empty and "Créé le" in df_period_all.columns:
+                df_evo = df_period_all.copy()
+                df_evo["Mois"] = df_evo["Créé le"].dt.to_period("M").astype(str)
+                # Remap Type contrat -> libellé "secteur" du dashboard
+                inv_map = {v: k for k, v in ENVIRONMENT_TO_TYPE_CONTRAT.items()}
+                # On garde un libellé court (ex. PMAJ -> TMAJ, PXV3/Vehis -> PXV3/Vehis)
+                libelles_secteur = {
+                    ENVIRONMENT_TO_TYPE_CONTRAT.get(env.upper(), env): env
+                    for env in CRM_ENVIRONNEMENTS
+                }
+                df_evo["Secteur"] = df_evo["Type contrat"].map(libelles_secteur).fillna(df_evo["Type contrat"])
+                df_evo_grouped = (
+                    df_evo.groupby(["Mois", "Secteur"]).size()
+                    .reset_index(name="Incidents")
+                    .sort_values("Mois")
+                )
+                # Total par mois (somme tous secteurs) pour l'annotation
+                totaux_mois = df_evo_grouped.groupby("Mois")["Incidents"].sum().reset_index()
+
+                fig_evo = px.bar(
+                    df_evo_grouped,
+                    x="Mois", y="Incidents", color="Secteur",
+                    title=f"Évolution mensuelle des incidents — {periode_str} (tous secteurs)",
+                    category_orders={"Secteur": list(CRM_ENVIRONNEMENTS)},
+                )
+                # Ajout des totaux au-dessus des barres empilées
+                fig_evo.add_scatter(
+                    x=totaux_mois["Mois"],
+                    y=totaux_mois["Incidents"],
+                    mode="text",
+                    text=totaux_mois["Incidents"].astype(int).astype(str),
+                    textposition="top center",
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
+                fig_evo.update_layout(
+                    barmode="stack",
+                    yaxis_title="Nb d'incidents",
+                    margin=dict(l=10, r=10, t=50, b=10),
+                    height=380,
+                )
+                st.plotly_chart(fig_evo, use_container_width=True, key="crm_evo_mensuelle")
+
+            # ----------------------------------------------------------------
+            # Charge par intervenant — tous secteurs confondus
+            # ----------------------------------------------------------------
+            if "intervenant_nom" in df_period_all.columns and not df_period_all.empty:
+                from data_processing.crm_processing import compute_crm_par_intervenant_normalise
+
+                st.markdown("#### Top 10 intervenants — tous secteurs confondus")
+                interv_total = compute_crm_par_intervenant_normalise(df_period_all, top=10)
+                if interv_total.empty:
+                    st.caption("Aucun intervenant renseigné sur la période.")
+                else:
+                    # Ordre décroissant : `value_counts()` renvoie déjà la
+                    # série triée du plus chargé au moins chargé.
+                    df_interv_total = interv_total.reset_index()
+                    df_interv_total.columns = ["Intervenant", "Incidents"]
+                    top_intervenants = df_interv_total["Intervenant"].tolist()
+
+                    # Décomposition par secteur restreinte au top 10
+                    df_interv_secteur = df_period_all[
+                        df_period_all["intervenant_nom"].isin(top_intervenants)
+                    ].copy()
+                    df_interv_secteur["Secteur"] = (
+                        df_interv_secteur["Type contrat"].map(libelles_secteur)
+                        .fillna(df_interv_secteur["Type contrat"])
+                    )
+                    df_interv_grouped = (
+                        df_interv_secteur.groupby(["intervenant_nom", "Secteur"]).size()
+                        .reset_index(name="Incidents")
+                        .rename(columns={"intervenant_nom": "Intervenant"})
+                    )
+
+                    fig_interv_total = px.bar(
+                        df_interv_grouped,
+                        x="Intervenant", y="Incidents", color="Secteur",
+                        title=f"Top 10 intervenants — {periode_str}",
+                        category_orders={
+                            "Intervenant": top_intervenants,  # ordre décroissant
+                            "Secteur": list(CRM_ENVIRONNEMENTS),
+                        },
+                    )
+                    fig_interv_total.update_layout(
+                        barmode="stack",
+                        yaxis_title="Nb d'incidents",
+                        xaxis_title=None,
+                        height=420,
+                        margin=dict(l=10, r=10, t=50, b=10),
+                    )
+                    # Annotation du total au-dessus de chaque barre empilée
+                    totaux_interv = (
+                        df_interv_grouped.groupby("Intervenant")["Incidents"].sum()
+                        .reindex(top_intervenants)
+                    )
+                    fig_interv_total.add_scatter(
+                        x=totaux_interv.index,
+                        y=totaux_interv.values,
+                        mode="text",
+                        text=totaux_interv.astype(int).astype(str),
+                        textposition="top center",
+                        showlegend=False,
+                        hoverinfo="skip",
+                    )
+                    st.plotly_chart(
+                        fig_interv_total,
+                        use_container_width=True,
+                        key="crm_interv_total_top10",
+                    )
+
+                    sans_interv_total = (df_period_all["intervenant_nom"] == "(non assigné)").sum()
+                    if sans_interv_total:
+                        st.caption(
+                            f"{sans_interv_total} incident(s) sans intervenant assigné "
+                            f"({round(sans_interv_total / len(df_period_all) * 100, 1)} % du total)."
+                        )
+
+            # ----------------------------------------------------------------
+            # Onglet par secteur : analyse détaillée
+            # ----------------------------------------------------------------
+            st.markdown("#### Analyse détaillée par secteur")
+            tabs = st.tabs(list(CRM_ENVIRONNEMENTS))
+            for tab, environnement in zip(tabs, CRM_ENVIRONNEMENTS):
+                with tab:
+                    df_env = filter_crm_par_environnement(df_crm, environnement)
+                    df_env_periode = filter_crm_periode(df_env, periode=periode)
+                    key_suffix = environnement.lower().replace("/", "_").replace("-", "_")
+                    _render_crm_env_block(
+                        df_env_periode, environnement, periode_str, key_suffix,
+                    )
+
+
         def support():
 
             dataframe_option = st.sidebar.selectbox("Choisir le dataframe", ["support_stellair", "support_affid", "xmed", "tmaj"], key="unique_dataframe_selection")
@@ -530,6 +924,8 @@ elif authentification_status:
                         f"activite_tmaj_{periode_str.replace(' ', '_').replace('/', '-')}.pptx",
                         "btn_activite_tmaj"
                     )
+
+                _render_crm_tmaj_section(periode, periode_str)
             elif dataframe_option == "support_stellair":
                 # KPI spécifiques pour support_stellair
                 col1, col2, col3 = st.columns(3)
@@ -681,7 +1077,7 @@ elif authentification_status:
                 # ----------- INDICATEURS YELDA (Chatbot Stellair - fse.stellair.fr) -----------
                 st.markdown("## 🤖 Indicateurs Yelda (Chatbot Stellair)")
                 try:
-                    from data_processing.yelda_processing import load_yelda_data, filter_yelda_stellair, filter_yelda_evaluated, filtrer_yelda_par_periode, compute_yelda_kpis
+                    from data_processing.yelda_processing import load_yelda_data, filter_yelda_stellair, filter_yelda_evaluated, filtrer_yelda_par_periode, compute_yelda_kpis, compute_yelda_utilisateurs_hubspot_metrics
                     # Chemin absolu pour éviter toute ambiguïté (OneDrive, cwd, etc.)
                     yelda_path = (PROJECT_ROOT / YELDA_DATA_PATH) if not (Path(YELDA_DATA_PATH).is_absolute()) else Path(YELDA_DATA_PATH)
                     df_yelda_raw = load_yelda_data(str(yelda_path))
@@ -724,6 +1120,13 @@ elif authentification_status:
                         col3.metric("✅ Satisfait (éval. LLM)", nb_satisfait)
                         col4.metric("❌ Insatisfait (éval. LLM)", nb_insatisfait)
                         col5.metric("Taux satisfaction*", f"{taux_satisfaction}%")
+                        util_hub = compute_yelda_utilisateurs_hubspot_metrics(df_yelda_eval)
+                        col_u1, col_u2 = st.columns(2)
+                        col_u1.metric("Utilisateurs uniques (ID HubSpot)", util_hub["nb_utilisateurs_uniques"])
+                        col_u2.metric("Utilisateurs avec ≥ 2 conversations (même ID)", util_hub["nb_utilisateurs_2plus_conversations"])
+                        st.caption(
+                            "Comptage sur les **conversations évaluées** ci‑dessus ; ID = contact HubSpot (`Persistant slot - hubspot_id_slot`) lorsque renseigné."
+                        )
                         nb_intent_sat = kpis_yelda.get('intentions_satisfaisant', 0)
                         nb_intent_non = kpis_yelda.get('intentions_non_satisfaisant', 0)
                         nb_intent_sans_avis = kpis_yelda.get('intentions_sans_avis', 0)
@@ -736,11 +1139,59 @@ elif authentification_status:
                         col_c.metric("➖ Sans avis", nb_intent_sans_avis)
                         col_d.metric("Taux satisfaction utilisateurs*", f"{taux_intent}%")
                         st.caption("*Taux satisfaction = Satisfaisant / (Satisfaisant + Non satisfaisant) — Sans avis = conversations évaluées sans intention déclarée")
+                        from data_processing.yelda_conversation_cross_analysis import (
+                            aggregate_yelda_cross_metrics,
+                            build_yelda_conversation_cross_analysis,
+                            load_hubspot_contacts_excel,
+                        )
+                        hs_contacts_dir = PROJECT_ROOT / HUBSPOT_CONTACTS_PATH if not Path(HUBSPOT_CONTACTS_PATH).is_absolute() else Path(HUBSPOT_CONTACTS_PATH)
+                        df_hs_contacts = load_hubspot_contacts_excel(hs_contacts_dir)
+                        df_yelda_eval_pour_attribution = filter_yelda_evaluated(df_yelda_fse)
+                        df_cross = build_yelda_conversation_cross_analysis(
+                            df_yelda_eval,
+                            df_tickets_processed,
+                            df_aircall_processed,
+                            df_contacts=df_hs_contacts if not df_hs_contacts.empty else None,
+                            window_hours=24,
+                            df_yelda_stellair_full=df_yelda_eval_pour_attribution,
+                        )
+                        st.markdown("**Croisement HubSpot × Aircall** — fenêtre **24 h** après la conversation (mêmes **conversations évaluées** que ci‑dessus)")
+                        st.caption(
+                            "Tickets du contact et appels dont le numéro matche le contact (export `Hubspot/contacts`) ou Yelda. "
+                            "Attribution d’un ticket : dernière conversation **évaluée** du contact avant la création du ticket."
+                        )
+                        if df_cross.empty:
+                            st.caption("Aucune conversation évaluée sur la période pour ce croisement — ou dates manquantes.")
+                        else:
+                            agg = aggregate_yelda_cross_metrics(df_cross)
+                            cx1, cx2, cx3, cx4, cx5 = st.columns(5)
+                            cx1.metric("Croisement — avec ID HubSpot", f"{agg['nb_avec_hubspot_id']} ({agg['part_avec_hubspot_id_pct']}%)")
+                            cx2.metric("Parcours sans ticket Yelda mais ≥1 ticket (24 h)", f"{agg['nb_parcours_false_avec_tickets_fenetre']} ({agg['part_parcours_false_avec_tickets_fenetre_pct']}%)")
+                            cx3.metric("Moy. tickets / conv. (fenêtre 24 h)", f"{agg['moyenne_nb_tickets_fenetre']}")
+                            cx4.metric("Moy. tickets attribués à la session", f"{agg['moyenne_nb_tickets_attribues_session']}")
+                            nb_conv_avec_appel = int((df_cross["nb_appels_aircall_fenetre"] > 0).sum()) if "nb_appels_aircall_fenetre" in df_cross.columns else 0
+                            cx5.metric("Conversations avec ≥1 appel (24 h)", nb_conv_avec_appel)
+                            csv_cross = df_cross.to_csv(index=False, encoding="utf-8-sig")
+                            st.sidebar.markdown("---")
+                            st.sidebar.caption("Yelda — analyse conversations")
+                            st.sidebar.download_button(
+                                "📥 Détail par conversation (CSV)",
+                                data=csv_cross,
+                                file_name=f"yelda_conversation_cross_{periode_str.replace(' ', '_').replace('/', '-')}.csv",
+                                mime="text/csv",
+                                key="sidebar_dl_yelda_cross_conv",
+                            )
                         st.markdown("### Évolution hebdomadaire des taux de satisfaction (LLM et utilisateurs)")
                         st.plotly_chart(graph_yelda_evolution_taux_satisfaction(df_yelda_eval), use_container_width=True)
                         st.plotly_chart(graph_yelda_evaluation(kpis_yelda['evaluation_counts']), use_container_width=True)
                         st.plotly_chart(graph_yelda_evaluation_intentions(nb_intent_sat, nb_intent_non, nb_intent_sans_avis), use_container_width=True)
-                        st.plotly_chart(graph_yelda_interactions_tickets_semaine(df_yelda_eval), use_container_width=True)
+                        st.plotly_chart(
+                            graph_yelda_interactions_tickets_semaine(
+                                df_yelda_eval,
+                                df_cross if not df_cross.empty else None,
+                            ),
+                            use_container_width=True,
+                        )
                         st.plotly_chart(graph_yelda_evolution_scores(df_yelda_eval), use_container_width=True)
                         if kpis_yelda['score_llm_moyen'] > 0:
                             st.plotly_chart(graph_yelda_score_llm(df_yelda_eval), use_container_width=True)
