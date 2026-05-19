@@ -22,6 +22,7 @@ HUBSPOT_CONTACTS_PATH = os.getenv(
     'HUBSPOT_CONTACTS_PATH', 'data/Affid/Hubspot/contacts'
 )
 HUBSPOT_AGENT_DATA_PATH = os.getenv('HUBSPOT_AGENT_PATH', 'data/Affid/Hubspot/agent')
+CRM_DATA_PATH = os.getenv('CRM_DATA_PATH', 'data/Affid/Crm')
 EVALUATION_DATA_PATH = os.getenv('EVALUATION_DATA_PATH', 'data/Affid/Evaluation/support_notes_filtered.xlsx')
 YELDA_DATA_PATH = os.getenv('YELDA_DATA_PATH', 'data/Affid/yelda/yelda.xlsx')
 ANALYSE_APPELS_TICKETS_PATH = os.getenv(
