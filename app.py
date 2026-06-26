@@ -1791,12 +1791,12 @@ elif authentification_status:
                 df_tickets_filtered = st.session_state[cache_key_data]['df_tickets_filtered']
                 st.info(f"📋 Utilisation des données en cache pour {periode_str}")
             
-            agents_n1 = ['Mourad HUMBLOT', 'Archimede KESSI', 'Celine Crendal', 'Melinda Marmin', 'Emilie GEST', 'Sandrine Sauvage', 'Cédeline DUVAL']
+            agents_n1 = ['Mourad HUMBLOT', 'Archimede KESSI', 'Nicolas AMY', 'Melinda Marmin', 'Emilie GEST', 'Sandrine Sauvage', 'Cédeline DUVAL']
             agents_n1_tickets = agents_n1 + ['Frederic SAUVAN']
-            agents_scores = ['Mourad HUMBLOT', 'Archimede KESSI', 'Celine Crendal', 'Emilie GEST', 'Cédeline DUVAL']
+            agents_scores = ['Mourad HUMBLOT', 'Archimede KESSI', 'Nicolas AMY', 'Emilie GEST', 'Cédeline DUVAL']
 
-            agents_score_suresnes = ['Mourad HUMBLOT', 'Archimede KESSI', 'Celine Crendal', 'Emilie GEST', 'Cédeline DUVAL']
-            agents_score_calais = ['Celine Crendal', 'Melinda Marmin', 'Emilie GEST', 'Sandrine Sauvage', 'Cédeline DUVAL']
+            agents_score_suresnes = ['Mourad HUMBLOT', 'Archimede KESSI', 'Nicolas AMY', 'Emilie GEST', 'Cédeline DUVAL']
+            agents_score_calais = ['Nicolas AMY', 'Melinda Marmin', 'Emilie GEST', 'Sandrine Sauvage', 'Cédeline DUVAL']
 
             # Cache pour les métriques de scoring
             cache_key_metrics = f'agents_metrics_{periode_str}_{objectif_total}_{ratio_appels}_{objectif_taux_service}_{hash(str(df_tickets_filtered.shape))}_{hash(str(agents_score_suresnes))}'
@@ -1889,13 +1889,60 @@ elif authentification_status:
             - 🔴 **Rouge** : score < 60%
             """)
 
-            # Calcul du nombre total de tickets traités par Céline Crendal (toutes orthographes)
+            # Calcul du nombre total de tickets traités par Nicolas AMY
 
 
             styled_df = style_scores(df_conforme)
             st.dataframe(styled_df, use_container_width=True)
 
             st.dataframe(df_conforme_calais, use_container_width=True)
+
+            # ----------- CLÔTURE DES TICKETS (mois par mois) -------------------
+            st.markdown("## 📦 Clôture des tickets support — mois par mois")
+            st.caption(
+                "Périmètre support (pipelines SSI/SSIA/SPSA). Base **activité** : chaque ticket est "
+                "rattaché à son **mois de clôture**. Taux de clôture = tickets clôturés dans le mois ÷ "
+                "(clôturés + tickets encore en cours à la fin du mois). Un ticket sans date de fermeture "
+                "est considéré **en cours**. Délai = **médiane** des jours calendaires entre création et clôture."
+            )
+
+            try:
+                from data_processing.kpi_generation import cloture_metrics_par_agent_mois
+                df_taux_cloture, df_delai_cloture, df_clot_cnt, df_enc_cnt = cloture_metrics_par_agent_mois(
+                    df_tickets_processed, agents=agents_n1_tickets, n_mois=12
+                )
+
+                if df_taux_cloture.empty:
+                    st.info("Aucune donnée de clôture disponible sur le périmètre support.")
+                else:
+                    def _couleur_taux(v):
+                        if pd.isna(v):
+                            return ''
+                        if v >= 80:
+                            return 'background-color: #a7dba7'   # vert
+                        elif v >= 50:
+                            return 'background-color: #f7c97f'   # orange
+                        return 'background-color: #f28e8e'       # rouge
+
+                    st.markdown("### ✅ Taux de clôture (%)")
+                    st.dataframe(
+                        df_taux_cloture.style.applymap(_couleur_taux).format("{:.0f}%", na_rep="–"),
+                        use_container_width=True
+                    )
+
+                    st.markdown("### ⏱️ Délai médian de clôture (jours)")
+                    st.dataframe(
+                        df_delai_cloture.style.format("{:.1f}", na_rep="–"),
+                        use_container_width=True
+                    )
+
+                    with st.expander("🔎 Détail des volumes (clôturés / en cours par mois)"):
+                        st.markdown("**Tickets clôturés dans le mois**")
+                        st.dataframe(df_clot_cnt.fillna(0).astype(int), use_container_width=True)
+                        st.markdown("**Tickets encore en cours à la fin du mois**")
+                        st.dataframe(df_enc_cnt.fillna(0).astype(int), use_container_width=True)
+            except Exception as e:
+                st.error(f"Erreur lors du calcul des taux de clôture : {e}")
 
 
             # ----------- EXPORT EXCEL PAR AGENT ET PAR JOUR -------------------
@@ -1917,7 +1964,7 @@ elif authentification_status:
                 
                 # Dictionnaire de correspondance des noms
                 correspondance_noms = {
-                    'Celine Crendal': ['Celine Crendal', 'Céline Crendal', 'CELINE CRENDAL', 'CÉLINE CRENDAL'],
+                    'Nicolas AMY': ['Nicolas AMY', 'Nicolas Amy', 'NICOLAS AMY'],
                     'Cédeline DUVAL': ['Cédeline DUVAL', 'Cedeline DUVAL', 'CÉDELINE DUVAL', 'CEDELINE DUVAL', 'CÃ©deline DUVAL', 'cedeline duval'],
                 }
                 
@@ -2044,7 +2091,31 @@ elif authentification_status:
                                 cell.fill = header_fill
                                 cell.font = header_font
                                 cell.alignment = Alignment(horizontal='center', vertical='center')
-                        
+
+                            # ----- Feuilles : taux de clôture par agent et par mois -----
+                            from data_processing.kpi_generation import cloture_metrics_par_agent_mois
+                            df_taux_c, df_delai_c, df_clot_c, df_enc_c = cloture_metrics_par_agent_mois(
+                                df_tickets_processed, agents=agents_n1_tickets, n_mois=12
+                            )
+
+                            def _ecrire_matrice_cloture(df_mat, sheet_name, arrondi=1):
+                                df_out = df_mat.copy()
+                                df_out.index.name = 'Agent'
+                                df_out = df_out.round(arrondi).reset_index()
+                                df_out.to_excel(writer, sheet_name=sheet_name, index=False)
+                                ws = writer.sheets[sheet_name]
+                                ws.column_dimensions['A'].width = 25
+                                for cell in ws[1]:
+                                    cell.fill = header_fill
+                                    cell.font = header_font
+                                    cell.alignment = Alignment(horizontal='center', vertical='center')
+
+                            if not df_taux_c.empty:
+                                _ecrire_matrice_cloture(df_taux_c, 'Taux clôture (%) par mois', arrondi=0)
+                                _ecrire_matrice_cloture(df_delai_c, 'Délai médian (jours)', arrondi=1)
+                                _ecrire_matrice_cloture(df_clot_c, 'Tickets clôturés par mois', arrondi=0)
+                                _ecrire_matrice_cloture(df_enc_c, 'En cours fin de mois', arrondi=0)
+
                         output.seek(0)
                         
                         # Stocker dans session_state
@@ -3362,7 +3433,7 @@ elif authentification_status:
         # Préparation des données 6 mois
         periode_6m = "6 derniers mois"
         periode_3m = "3 derniers mois"
-        agents_n1 = ['Mourad HUMBLOT', 'Archimede KESSI', 'Céline Crendal', 'Melinda Marmin', 'Emilie GEST', 'Sandrine Sauvage']
+        agents_n1 = ['Mourad HUMBLOT', 'Archimede KESSI', 'Nicolas AMY', 'Melinda Marmin', 'Emilie GEST', 'Sandrine Sauvage']
         df_support_6m = filtrer_par_periode(def_df_support(process_aircall_data(df_aircall), process_aircall_data(df_aircall), line_tous, agents_all), periode_6m)
         df_tickets_6m = filtrer_par_periode(df_tickets_processed, periode_6m)
         df_scores_6m = df_compute_ticket_appels_metrics(agents_n1, df_tickets_6m, df_support_6m)

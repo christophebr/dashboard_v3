@@ -5953,3 +5953,86 @@ def generer_fichier_mots_cles_manquants(df_tickets, seuil_confiance=0.3, output_
 
 
 # Fonctions Gantt supprimées
+
+
+def cloture_metrics_par_agent_mois(df_tickets, agents=None, n_mois=12,
+                                   pipelines=('SSI', 'SSIA', 'SPSA')):
+    """Taux de clôture et délai médian de clôture, par agent et par mois.
+
+    Périmètre : tickets support uniquement (Pipeline dans SSI/SSIA/SPSA).
+
+    Base de calcul = ACTIVITÉ, rattachée au MOIS DE CLÔTURE :
+      - Numérateur (mois M)  : tickets clôturés au cours de M (Date de fermeture dans M).
+      - Dénominateur (mois M): clôturés dans M + tickets encore EN COURS à la fin de M
+                               (créés avant fin de M et sans date de fermeture, ou fermés après M).
+      - Taux de clôture (%)  = clôturés / (clôturés + en cours fin de mois).
+    Un ticket sans « Date de fermeture » est considéré en cours de traitement.
+
+    Délai médian = médiane des jours calendaires (Date de fermeture − Date de création)
+    sur les tickets clôturés au cours du mois.
+
+    Retourne 4 matrices (agents en lignes, mois 'AAAA-MM' en colonnes) :
+        df_taux, df_delai_median, df_clotures, df_encours
+    """
+    import pandas as pd
+
+    df = df_tickets.copy()
+
+    # Périmètre support
+    if 'Pipeline' in df.columns:
+        df = df[df['Pipeline'].isin(list(pipelines))]
+
+    # Restriction aux agents demandés
+    agent_col = 'Propriétaire du ticket'
+    if agents is not None and agent_col in df.columns:
+        df = df[df[agent_col].isin(agents)]
+
+    # Parsing défensif des dates
+    df['_creation'] = pd.to_datetime(df.get('Date de création'), errors='coerce')
+    df['_fermeture'] = pd.to_datetime(df.get('Date de fermeture'), errors='coerce')
+    df = df[df['_creation'].notna()]
+
+    # Liste des n derniers mois (basée sur la dernière clôture connue, sinon dernière création)
+    ref = df['_fermeture'].max()
+    if pd.isna(ref):
+        ref = df['_creation'].max()
+    if pd.isna(ref):
+        vide = pd.DataFrame()
+        return vide, vide, vide, vide
+    mois_periods = pd.period_range(end=ref.to_period('M'), periods=n_mois, freq='M')
+    mois_labels = [str(p) for p in mois_periods]
+
+    if agents is not None:
+        agents_list = list(agents)
+    else:
+        agents_list = sorted(df[agent_col].dropna().unique())
+
+    df['_ferm_period'] = df['_fermeture'].dt.to_period('M')
+
+    df_taux = pd.DataFrame(index=agents_list, columns=mois_labels, dtype=float)
+    df_delai = pd.DataFrame(index=agents_list, columns=mois_labels, dtype=float)
+    df_clot = pd.DataFrame(index=agents_list, columns=mois_labels, dtype=float)
+    df_enc = pd.DataFrame(index=agents_list, columns=mois_labels, dtype=float)
+
+    for p in mois_periods:
+        lab = str(p)
+        fin_mois = p.to_timestamp(how='end')
+        closed_m = df[df['_ferm_period'] == p]
+        encours_m = df[(df['_creation'] <= fin_mois)
+                       & (df['_fermeture'].isna() | (df['_fermeture'] > fin_mois))]
+        for ag in agents_list:
+            sub_c = closed_m[closed_m[agent_col] == ag]
+            c = len(sub_c)
+            e = int((encours_m[agent_col] == ag).sum())
+            df_clot.at[ag, lab] = c
+            df_enc.at[ag, lab] = e
+            denom = c + e
+            df_taux.at[ag, lab] = (c / denom * 100) if denom > 0 else None
+            if c > 0:
+                delais = (sub_c['_fermeture'] - sub_c['_creation']).dt.total_seconds() / 86400.0
+                delais = delais[delais >= 0]
+                df_delai.at[ag, lab] = delais.median() if len(delais) else None
+            else:
+                df_delai.at[ag, lab] = None
+
+    return df_taux, df_delai, df_clot, df_enc
