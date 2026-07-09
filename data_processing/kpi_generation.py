@@ -487,6 +487,7 @@ def graph_activite(df_support):
         "S2025-32": "Stellair HS",
         "S2025-48": "Stellair HS",
         "S2026-04" : "Affid BUG",
+        "S2026-27": "Anomalie SIM lecteurs MOVE",
     }
 
     # Préparation des listes pour les bulles
