@@ -71,13 +71,18 @@ def load_hubspot_data(ticket_path, db_path="data/Cache/data_cache.db"):
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
         conn = sqlite3.connect(db_path)
-        df_processed.to_sql(table_name, conn, if_exists="replace", index=False)
-        conn.close()
+        try:
+            df_processed.to_sql(table_name, conn, if_exists="replace", index=False)
+            conn.commit()  # persister explicitement avant fermeture (évite un rollback à la fermeture)
+        finally:
+            conn.close()
 
     # 4. Lecture finale depuis SQLite
     conn = sqlite3.connect(db_path)
-    df = pd.read_sql(f"SELECT * FROM {table_name}", conn, parse_dates=["Date de création"])
-    conn.close()
+    try:
+        df = pd.read_sql(f"SELECT * FROM {table_name}", conn, parse_dates=["Date de création"])
+    finally:
+        conn.close()
     data_ticket = df
 
     return data_ticket

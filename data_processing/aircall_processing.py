@@ -38,22 +38,61 @@ def load_processed_data_from_cache(cache_key, cache_path="data/Affid/Cache/proce
 
 
 def save_to_sqlite(df, table_name, db_path="data/Affid/Cache/cache.sqlite"):
-    with sqlite3.connect(db_path) as conn:
-        # Créer les index pour les colonnes fréquemment utilisées
+    # S'assurer que le dossier de la base existe (déploiement : /app fraîchement cloné)
+    parent = os.path.dirname(db_path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+
+    # Fermer une éventuelle connexion de lecture restée ouverte sur le même fichier
+    # (read_from_sqlite garde une connexion persistante -> risque de verrou au 1er lancement)
+    if hasattr(read_from_sqlite, "conn"):
+        try:
+            read_from_sqlite.conn.close()
+        except Exception:
+            pass
+        del read_from_sqlite.conn
+
+    conn = sqlite3.connect(db_path)
+    try:
         df.to_sql(table_name, conn, if_exists="replace", index=False)
+        conn.commit()  # persister la table AVANT de créer les index
+
+        # Index (optimisation) : ne jamais faire échouer le chargement si ça ne passe pas
         cursor = conn.cursor()
-        cursor.execute(f"CREATE INDEX IF NOT EXISTS idx_date ON {table_name}(Date)")
-        cursor.execute(f"CREATE INDEX IF NOT EXISTS idx_semaine ON {table_name}(Semaine)")
-        cursor.execute(f"CREATE INDEX IF NOT EXISTS idx_username ON {table_name}(UserName)")
-        conn.commit()
+        table_existe = cursor.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table_name,)
+        ).fetchone() is not None
+        if table_existe:
+            for col, idx in (("Date", "idx_date"), ("Semaine", "idx_semaine"), ("UserName", "idx_username")):
+                if col in df.columns:
+                    try:
+                        cursor.execute(f'CREATE INDEX IF NOT EXISTS {idx} ON "{table_name}"("{col}")')
+                    except sqlite3.OperationalError as e:
+                        print(f"⚠️ Index {idx} non créé: {e}")
+            conn.commit()
+        else:
+            print(f"⚠️ Table {table_name} absente après écriture (DataFrame vide ?), index ignorés.")
+    finally:
+        conn.close()
 
 def read_from_sqlite(table_name, db_path="data/Affid/Cache/cache.sqlite"):
     # Utiliser une seule connexion pour toute la session
     if not hasattr(read_from_sqlite, 'conn'):
         read_from_sqlite.conn = sqlite3.connect(db_path)
-    
-    df = pd.read_sql(f"SELECT * FROM {table_name}", read_from_sqlite.conn, 
-                      parse_dates=['StartTime', 'Date', 'time (TZ offset incl.)', 'HangupTime'])
+
+    try:
+        df = pd.read_sql(f"SELECT * FROM {table_name}", read_from_sqlite.conn,
+                          parse_dates=['StartTime', 'Date', 'time (TZ offset incl.)', 'HangupTime'])
+    except Exception:
+        # Table absente (1er lancement) : fermer la connexion pour ne pas verrouiller le
+        # fichier lors de l'écriture qui suit (save_to_sqlite), puis propager l'erreur.
+        try:
+            read_from_sqlite.conn.close()
+        except Exception:
+            pass
+        if hasattr(read_from_sqlite, 'conn'):
+            del read_from_sqlite.conn
+        raise
     
     # Normalisation de LastState pour corriger le problème avec les données Affid
     if 'LastState' in df.columns:
