@@ -6037,3 +6037,31 @@ def cloture_metrics_par_agent_mois(df_tickets, agents=None, n_mois=12,
                 df_delai.at[ag, lab] = None
 
     return df_taux, df_delai, df_clot, df_enc
+
+
+def taux_escalade_n2(df_tickets, pipelines=('SSI', 'SSIA', 'SPSA')):
+    """Taux d'escalade vers le N2 sur le périmètre support.
+
+    Escalade = tickets passés par le support N2 ('Passé par le support N2' == 'Oui')
+    rapportés au total des tickets support (pipelines SSI/SSIA/SPSA), hors S2024-01.
+    Même définition du N2 que le tableau de bord des agents N2.
+
+    Retourne (taux_%, nb_n2, nb_total).
+    """
+    df = df_tickets.copy()
+    if 'Semaine' in df.columns:
+        df = df[df['Semaine'] != 'S2024-01']
+    if 'Pipeline' in df.columns:
+        df = df[df['Pipeline'].isin(list(pipelines))]
+    if df.empty or 'Passé par le support N2' not in df.columns:
+        return 0.0, 0, 0
+
+    if 'Ticket ID' in df.columns:
+        total = df['Ticket ID'].nunique()
+        nb_n2 = df.loc[df['Passé par le support N2'] == 'Oui', 'Ticket ID'].nunique()
+    else:
+        total = len(df)
+        nb_n2 = int((df['Passé par le support N2'] == 'Oui').sum())
+
+    taux = (100 * nb_n2 / total) if total else 0.0
+    return round(taux, 1), int(nb_n2), int(total)

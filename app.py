@@ -345,7 +345,7 @@ elif authentification_status:
         "Support": "support",
         "Agents": "agents",
         "Tickets": "tickets",
-        "Analyste IA": "mcp_analyst"
+        "Chatbot": "chatbot"
     }
 
 
@@ -424,7 +424,7 @@ elif authentification_status:
             graph_activite, graph_taux_jour, graph_taux_heure, 
             graph_activite_xmed, graph_activite_tmaj, calculate_ticket_response_time, 
             graph_charge_affid_stellair, graph_repartition_groupes_stellair,
-            categoriser_avec_ia_personnalisee, evo_tickets_par_sujets_mensuel, repartition_lecteurs_par_type
+            categoriser_avec_ia_personnalisee, repartition_lecteurs_par_type
         )
 
 
@@ -933,7 +933,7 @@ elif authentification_status:
                 col2.metric("Appels entrant / Jour", kpis['Entrant'])
                 col3.metric("Numéros uniques / Jour", kpis['Numero_unique'])
 
-                col4, col5 = st.columns(2)
+                col4, col5, col6 = st.columns(3)
                 col4.metric(
                     "Entrants vs Tickets (%)",
                     f"{round(kpis['activite_appels_pourcentage'] * 100, 2)}% / {round(kpis['activite_tickets_pourcentage'] * 100, 2)}%"
@@ -948,6 +948,15 @@ elif authentification_status:
                 moyenne_temps_reponse, graph_temps_reponse, df_temps_tickets = st.session_state[temps_rep_cache_key]
 
                 col5.metric("Temps de réponse moyen aux tickets (h:min)", f"{int(moyenne_temps_reponse)}:{int((moyenne_temps_reponse % 1) * 60):02d}")
+
+                # Taux d'escalade vers le N2 (même définition que le tableau de bord agents N2)
+                from data_processing.kpi_generation import taux_escalade_n2
+                taux_n2, nb_n2, nb_total_n2 = taux_escalade_n2(df_tickets_periode)
+                col6.metric(
+                    "Taux d'escalade N2 (%)",
+                    f"{taux_n2}%",
+                    help=f"{nb_n2} tickets passés par le N2 sur {nb_total_n2} tickets support (SSI/SSIA/SPSA) sur la période.",
+                )
 
                 # Graphique principal
                 st.plotly_chart(graph_activite(df_support), use_container_width=True)
@@ -1074,131 +1083,7 @@ elif authentification_status:
                         csv_n1 = tickets_n1_en_cours[['Ticket ID', 'Date', 'Statut du ticket', 'Propriétaire du ticket']].to_csv(index=False, encoding='utf-8-sig')
                         st.download_button("📄 Télécharger CSV", data=csv_n1, file_name=f"tickets_n1_en_cours_{periode_str.replace(' ', '_').replace('/', '-')}.csv", mime="text/csv")
                 
-                # ----------- INDICATEURS YELDA (Chatbot Stellair - fse.stellair.fr) -----------
-                st.markdown("## 🤖 Indicateurs Yelda (Chatbot Stellair)")
-                try:
-                    from data_processing.yelda_processing import load_yelda_data, filter_yelda_stellair, filter_yelda_evaluated, filtrer_yelda_par_periode, compute_yelda_kpis, compute_yelda_utilisateurs_hubspot_metrics
-                    # Chemin absolu pour éviter toute ambiguïté (OneDrive, cwd, etc.)
-                    yelda_path = (PROJECT_ROOT / YELDA_DATA_PATH) if not (Path(YELDA_DATA_PATH).is_absolute()) else Path(YELDA_DATA_PATH)
-                    df_yelda_raw = load_yelda_data(str(yelda_path))
-                    if df_yelda_raw is not None and not df_yelda_raw.empty:
-                        df_yelda_fse = filter_yelda_stellair(df_yelda_raw)
-                        df_yelda_periode = filtrer_yelda_par_periode(df_yelda_fse, periode)
-                        df_yelda_eval = filter_yelda_evaluated(df_yelda_periode)
-                        with st.expander("🔍 Diagnostic Yelda (chemin, effectifs par filtre)"):
-                            import os as _os_diag
-                            mtime = _os_diag.path.getmtime(yelda_path) if yelda_path.exists() else 0
-                            from datetime import datetime as _dt
-                            st.caption(f"Fichier lu : `{yelda_path}`")
-                            st.caption(f"Dernière modif : {_dt.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')}" if mtime else "N/A")
-                            st.caption(f"Brut : {len(df_yelda_raw)} | fse.stellair : {len(df_yelda_fse)} | Période : {len(df_yelda_periode)} | Évaluées : {len(df_yelda_eval)}")
-                            eval_col = next((c for c in df_yelda_periode.columns if 'valuation' in c.lower() and 'llm' not in c.lower()), None) or 'Évaluation'
-                            eval_llm_col = next((c for c in df_yelda_periode.columns if 'valuation' in c.lower() and 'llm' in c.lower()), None)
-                            if eval_col in df_yelda_periode.columns:
-                                counts = df_yelda_periode[eval_col].value_counts(dropna=False)
-                                st.caption(f"Répartition « {eval_col} » :")
-                                df_counts = counts.rename_axis('Valeur').reset_index(name='Nb')
-                                st.dataframe(df_counts, use_container_width=True, hide_index=True)
-                                nb_sat_rev = df_yelda_periode[eval_col].fillna('').astype(str).str.lower().str.contains('satisfait|revoir', regex=True).sum()
-                                st.caption(f"→ Satisfait/Insatisfait/À revoir (regex) : {int(nb_sat_rev)}")
-                            if eval_llm_col and eval_llm_col in df_yelda_periode.columns:
-                                counts_llm = df_yelda_periode[eval_llm_col].value_counts(dropna=False)
-                                st.caption(f"Répartition « {eval_llm_col} » :")
-                                df_llm = counts_llm.rename_axis('Valeur').reset_index(name='Nb')
-                                st.dataframe(df_llm, use_container_width=True, hide_index=True)
-                                nb_llm_sat_rev = df_yelda_periode[eval_llm_col].fillna('').astype(str).str.lower().str.contains('satisfait|revoir', regex=True).sum()
-                                st.caption(f"→ Satisfait/Insatisfait/À revoir : {int(nb_llm_sat_rev)}")
-                        kpis_yelda = compute_yelda_kpis(df_yelda_eval)
-                        nb_satisfait = kpis_yelda['evaluation_counts']['Satisfait']
-                        nb_insatisfait = kpis_yelda['evaluation_counts']['Insatisfait']
-                        nb_revoir = kpis_yelda['evaluation_counts']['À revoir']
-                        total_eval = nb_satisfait + nb_insatisfait + nb_revoir
-                        taux_satisfaction = round(100 * nb_satisfait / total_eval, 1) if total_eval > 0 else 0
-                        col1, col2, col3, col4, col5 = st.columns(5)
-                        col1.metric("Conversations évaluées (fse.stellair.fr) — Évaluation LLM", kpis_yelda['nb_interactions'])
-                        col2.metric("Tickets créés", kpis_yelda['nb_tickets_crees'])
-                        col3.metric("✅ Satisfait (éval. LLM)", nb_satisfait)
-                        col4.metric("❌ Insatisfait (éval. LLM)", nb_insatisfait)
-                        col5.metric("Taux satisfaction*", f"{taux_satisfaction}%")
-                        util_hub = compute_yelda_utilisateurs_hubspot_metrics(df_yelda_eval)
-                        col_u1, col_u2 = st.columns(2)
-                        col_u1.metric("Utilisateurs uniques (ID HubSpot)", util_hub["nb_utilisateurs_uniques"])
-                        col_u2.metric("Utilisateurs avec ≥ 2 conversations (même ID)", util_hub["nb_utilisateurs_2plus_conversations"])
-                        st.caption(
-                            "Comptage sur les **conversations évaluées** ci‑dessus ; ID = contact HubSpot (`Persistant slot - hubspot_id_slot`) lorsque renseigné."
-                        )
-                        nb_intent_sat = kpis_yelda.get('intentions_satisfaisant', 0)
-                        nb_intent_non = kpis_yelda.get('intentions_non_satisfaisant', 0)
-                        nb_intent_sans_avis = kpis_yelda.get('intentions_sans_avis', 0)
-                        tot_intent = nb_intent_sat + nb_intent_non
-                        taux_intent = round(100 * nb_intent_sat / tot_intent, 1) if tot_intent > 0 else 0
-                        st.markdown("**Évaluation utilisateurs (Intentions)** — reponse_agent_satisfaisante / non_satisfaisante / sans avis")
-                        col_a, col_b, col_c, col_d = st.columns(4)
-                        col_a.metric("👍 Satisfaisant", nb_intent_sat)
-                        col_b.metric("👎 Non satisfaisant", nb_intent_non)
-                        col_c.metric("➖ Sans avis", nb_intent_sans_avis)
-                        col_d.metric("Taux satisfaction utilisateurs*", f"{taux_intent}%")
-                        st.caption("*Taux satisfaction = Satisfaisant / (Satisfaisant + Non satisfaisant) — Sans avis = conversations évaluées sans intention déclarée")
-                        from data_processing.yelda_conversation_cross_analysis import (
-                            aggregate_yelda_cross_metrics,
-                            build_yelda_conversation_cross_analysis,
-                            load_hubspot_contacts_excel,
-                        )
-                        hs_contacts_dir = PROJECT_ROOT / HUBSPOT_CONTACTS_PATH if not Path(HUBSPOT_CONTACTS_PATH).is_absolute() else Path(HUBSPOT_CONTACTS_PATH)
-                        df_hs_contacts = load_hubspot_contacts_excel(hs_contacts_dir)
-                        df_yelda_eval_pour_attribution = filter_yelda_evaluated(df_yelda_fse)
-                        df_cross = build_yelda_conversation_cross_analysis(
-                            df_yelda_eval,
-                            df_tickets_processed,
-                            df_aircall_processed,
-                            df_contacts=df_hs_contacts if not df_hs_contacts.empty else None,
-                            window_hours=24,
-                            df_yelda_stellair_full=df_yelda_eval_pour_attribution,
-                        )
-                        st.markdown("**Croisement HubSpot × Aircall** — fenêtre **24 h** après la conversation (mêmes **conversations évaluées** que ci‑dessus)")
-                        st.caption(
-                            "Tickets du contact et appels dont le numéro matche le contact (export `Hubspot/contacts`) ou Yelda. "
-                            "Attribution d’un ticket : dernière conversation **évaluée** du contact avant la création du ticket."
-                        )
-                        if df_cross.empty:
-                            st.caption("Aucune conversation évaluée sur la période pour ce croisement — ou dates manquantes.")
-                        else:
-                            agg = aggregate_yelda_cross_metrics(df_cross)
-                            cx1, cx2, cx3, cx4, cx5 = st.columns(5)
-                            cx1.metric("Croisement — avec ID HubSpot", f"{agg['nb_avec_hubspot_id']} ({agg['part_avec_hubspot_id_pct']}%)")
-                            cx2.metric("Parcours sans ticket Yelda mais ≥1 ticket (24 h)", f"{agg['nb_parcours_false_avec_tickets_fenetre']} ({agg['part_parcours_false_avec_tickets_fenetre_pct']}%)")
-                            cx3.metric("Moy. tickets / conv. (fenêtre 24 h)", f"{agg['moyenne_nb_tickets_fenetre']}")
-                            cx4.metric("Moy. tickets attribués à la session", f"{agg['moyenne_nb_tickets_attribues_session']}")
-                            nb_conv_avec_appel = int((df_cross["nb_appels_aircall_fenetre"] > 0).sum()) if "nb_appels_aircall_fenetre" in df_cross.columns else 0
-                            cx5.metric("Conversations avec ≥1 appel (24 h)", nb_conv_avec_appel)
-                            csv_cross = df_cross.to_csv(index=False, encoding="utf-8-sig")
-                            st.sidebar.markdown("---")
-                            st.sidebar.caption("Yelda — analyse conversations")
-                            st.sidebar.download_button(
-                                "📥 Détail par conversation (CSV)",
-                                data=csv_cross,
-                                file_name=f"yelda_conversation_cross_{periode_str.replace(' ', '_').replace('/', '-')}.csv",
-                                mime="text/csv",
-                                key="sidebar_dl_yelda_cross_conv",
-                            )
-                        st.markdown("### Évolution hebdomadaire des taux de satisfaction (LLM et utilisateurs)")
-                        st.plotly_chart(graph_yelda_evolution_taux_satisfaction(df_yelda_eval), use_container_width=True)
-                        st.plotly_chart(graph_yelda_evaluation(kpis_yelda['evaluation_counts']), use_container_width=True)
-                        st.plotly_chart(graph_yelda_evaluation_intentions(nb_intent_sat, nb_intent_non, nb_intent_sans_avis), use_container_width=True)
-                        st.plotly_chart(
-                            graph_yelda_interactions_tickets_semaine(
-                                df_yelda_eval,
-                                df_cross if not df_cross.empty else None,
-                            ),
-                            use_container_width=True,
-                        )
-                        st.plotly_chart(graph_yelda_evolution_scores(df_yelda_eval), use_container_width=True)
-                        if kpis_yelda['score_llm_moyen'] > 0:
-                            st.plotly_chart(graph_yelda_score_llm(df_yelda_eval), use_container_width=True)
-                    else:
-                        st.info("📁 Fichier Yelda non trouvé. Placez `yelda.xlsx` dans `data/Affid/yelda/` pour afficher les indicateurs.")
-                except Exception as e:
-                    st.warning(f"Indicateurs Yelda non disponibles : {e}")
+                # (KPI Chatbot Yelda deplaces vers la page "Chatbot".)
 
                 # ----------- ANALYSE QUALITATIVE (échantillon 30% appels + tickets) -----------
                 st.markdown("## 📋 Analyse qualitative (échantillon 30%)")
@@ -1435,56 +1320,9 @@ elif authentification_status:
                         except Exception as e:
                             st.error(f"Erreur : {e}")
                 
-                st.plotly_chart(kpis.get('sunburst_categories'))
-                col1, col2 = st.columns([3, 1])
-                with col2:
-                    if st.button("📊 Exporter Sunburst en PowerPoint", key="btn_sunburst_categories"):
-                        try:
-                            pptx_io = create_single_graph_powerpoint(kpis.get('sunburst_categories'), "Répartition des tickets SSI par sujets et catégories", periode_str)
-                            st.download_button(
-                                label="📥 Télécharger",
-                                data=pptx_io,
-                                file_name=f"sunburst_categories_ssi_{periode_str.replace(' ', '_').replace('/', '-')}.pptx",
-                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                            )
-                        except Exception as e:
-                            st.error(f"Erreur : {e}")
-                
-                # Nouveaux graphiques d'évolution mensuelle des tickets
-                fig_total, fig_sujets = evo_tickets_par_sujets_mensuel(filtrer_par_periode(df_tickets_processed, periode))
-                
-                # Graphique du total mensuel
-                st.plotly_chart(fig_total, use_container_width=True)
-                col1, col2 = st.columns([3, 1])
-                with col2:
-                    if st.button("📊 Exporter total mensuel en PowerPoint", key="btn_total_mensuel"):
-                        try:
-                            pptx_io = create_single_graph_powerpoint(fig_total, "Évolution mensuelle du nombre total de tickets SSI", periode_str)
-                            st.download_button(
-                                label="📥 Télécharger",
-                                data=pptx_io,
-                                file_name=f"total_mensuel_{periode_str.replace(' ', '_').replace('/', '-')}.pptx",
-                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                            )
-                        except Exception as e:
-                            st.error(f"Erreur : {e}")
-                
-                # Graphique des sujets par mois
-                st.plotly_chart(fig_sujets, use_container_width=True)
-                col1, col2 = st.columns([3, 1])
-                with col2:
-                    if st.button("📊 Exporter évolution sujets en PowerPoint", key="btn_evo_sujets_mensuel"):
-                        try:
-                            pptx_io = create_single_graph_powerpoint(fig_sujets, "Évolution mensuelle des tickets SSI par sujets", periode_str)
-                            st.download_button(
-                                label="📥 Télécharger",
-                                data=pptx_io,
-                                file_name=f"evolution_sujets_mensuel_{periode_str.replace(' ', '_').replace('/', '-')}.pptx",
-                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                            )
-                        except Exception as e:
-                            st.error(f"Erreur : {e}")
-                
+                # (Graphiques retirés : sunburst "Répartition des tickets SSI par sujets et
+                #  catégories" et les deux évolutions mensuelles des tickets SSI.)
+
                 # Graphique camembert des types de lecteur
                 st.subheader("📊 Répartition des tickets Lecteur par type de lecteur")
                 try:
@@ -3419,9 +3257,146 @@ elif authentification_status:
 
         tickets()
 
-    elif selection_page == "Analyste IA":
-        from utils.mcp_ui import render_mcp_analyst_page
-        render_mcp_analyst_page()
+    elif selection_page == "Chatbot":
+        from data_processing.aircall_processing import process_aircall_data
+        if 'df_aircall_processed' not in st.session_state:
+            st.session_state['df_aircall_processed'] = process_aircall_data(st.session_state['df_aircall'])
+        df_aircall_processed = st.session_state['df_aircall_processed']
+
+        st.title("🤖 Chatbot Yelda")
+        periode_option = st.selectbox(
+            "Période :",
+            ["1 an", "6 derniers mois", "3 derniers mois", "Dernier mois"],
+            index=0, key="periode_chatbot",
+        )
+        periode = periode_option
+        periode_str = periode_option
+
+        # ----------- INDICATEURS YELDA (Chatbot Stellair - fse.stellair.fr) -----------
+        st.markdown("## 🤖 Indicateurs Yelda (Chatbot Stellair)")
+        try:
+            from data_processing.yelda_processing import load_yelda_data, filter_yelda_stellair, filter_yelda_evaluated, filtrer_yelda_par_periode, compute_yelda_kpis, compute_yelda_utilisateurs_hubspot_metrics
+            # Chemin absolu pour éviter toute ambiguïté (OneDrive, cwd, etc.)
+            yelda_path = (PROJECT_ROOT / YELDA_DATA_PATH) if not (Path(YELDA_DATA_PATH).is_absolute()) else Path(YELDA_DATA_PATH)
+            df_yelda_raw = load_yelda_data(str(yelda_path))
+            if df_yelda_raw is not None and not df_yelda_raw.empty:
+                df_yelda_fse = filter_yelda_stellair(df_yelda_raw)
+                df_yelda_periode = filtrer_yelda_par_periode(df_yelda_fse, periode)
+                df_yelda_eval = filter_yelda_evaluated(df_yelda_periode)
+                with st.expander("🔍 Diagnostic Yelda (chemin, effectifs par filtre)"):
+                    import os as _os_diag
+                    mtime = _os_diag.path.getmtime(yelda_path) if yelda_path.exists() else 0
+                    from datetime import datetime as _dt
+                    st.caption(f"Fichier lu : `{yelda_path}`")
+                    st.caption(f"Dernière modif : {_dt.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')}" if mtime else "N/A")
+                    st.caption(f"Brut : {len(df_yelda_raw)} | fse.stellair : {len(df_yelda_fse)} | Période : {len(df_yelda_periode)} | Évaluées : {len(df_yelda_eval)}")
+                    eval_col = next((c for c in df_yelda_periode.columns if 'valuation' in c.lower() and 'llm' not in c.lower()), None) or 'Évaluation'
+                    eval_llm_col = next((c for c in df_yelda_periode.columns if 'valuation' in c.lower() and 'llm' in c.lower()), None)
+                    if eval_col in df_yelda_periode.columns:
+                        counts = df_yelda_periode[eval_col].value_counts(dropna=False)
+                        st.caption(f"Répartition « {eval_col} » :")
+                        df_counts = counts.rename_axis('Valeur').reset_index(name='Nb')
+                        st.dataframe(df_counts, use_container_width=True, hide_index=True)
+                        nb_sat_rev = df_yelda_periode[eval_col].fillna('').astype(str).str.lower().str.contains('satisfait|revoir', regex=True).sum()
+                        st.caption(f"→ Satisfait/Insatisfait/À revoir (regex) : {int(nb_sat_rev)}")
+                    if eval_llm_col and eval_llm_col in df_yelda_periode.columns:
+                        counts_llm = df_yelda_periode[eval_llm_col].value_counts(dropna=False)
+                        st.caption(f"Répartition « {eval_llm_col} » :")
+                        df_llm = counts_llm.rename_axis('Valeur').reset_index(name='Nb')
+                        st.dataframe(df_llm, use_container_width=True, hide_index=True)
+                        nb_llm_sat_rev = df_yelda_periode[eval_llm_col].fillna('').astype(str).str.lower().str.contains('satisfait|revoir', regex=True).sum()
+                        st.caption(f"→ Satisfait/Insatisfait/À revoir : {int(nb_llm_sat_rev)}")
+                kpis_yelda = compute_yelda_kpis(df_yelda_eval)
+                nb_satisfait = kpis_yelda['evaluation_counts']['Satisfait']
+                nb_insatisfait = kpis_yelda['evaluation_counts']['Insatisfait']
+                nb_revoir = kpis_yelda['evaluation_counts']['À revoir']
+                total_eval = nb_satisfait + nb_insatisfait + nb_revoir
+                taux_satisfaction = round(100 * nb_satisfait / total_eval, 1) if total_eval > 0 else 0
+                col1, col2, col3, col4, col5 = st.columns(5)
+                col1.metric("Conversations évaluées (fse.stellair.fr) — Évaluation LLM", kpis_yelda['nb_interactions'])
+                col2.metric("Tickets créés", kpis_yelda['nb_tickets_crees'])
+                col3.metric("✅ Satisfait (éval. LLM)", nb_satisfait)
+                col4.metric("❌ Insatisfait (éval. LLM)", nb_insatisfait)
+                col5.metric("Taux satisfaction*", f"{taux_satisfaction}%")
+                util_hub = compute_yelda_utilisateurs_hubspot_metrics(df_yelda_eval)
+                col_u1, col_u2 = st.columns(2)
+                col_u1.metric("Utilisateurs uniques (ID HubSpot)", util_hub["nb_utilisateurs_uniques"])
+                col_u2.metric("Utilisateurs avec ≥ 2 conversations (même ID)", util_hub["nb_utilisateurs_2plus_conversations"])
+                st.caption(
+                    "Comptage sur les **conversations évaluées** ci‑dessus ; ID = contact HubSpot (`Persistant slot - hubspot_id_slot`) lorsque renseigné."
+                )
+                nb_intent_sat = kpis_yelda.get('intentions_satisfaisant', 0)
+                nb_intent_non = kpis_yelda.get('intentions_non_satisfaisant', 0)
+                nb_intent_sans_avis = kpis_yelda.get('intentions_sans_avis', 0)
+                tot_intent = nb_intent_sat + nb_intent_non
+                taux_intent = round(100 * nb_intent_sat / tot_intent, 1) if tot_intent > 0 else 0
+                st.markdown("**Évaluation utilisateurs (Intentions)** — reponse_agent_satisfaisante / non_satisfaisante / sans avis")
+                col_a, col_b, col_c, col_d = st.columns(4)
+                col_a.metric("👍 Satisfaisant", nb_intent_sat)
+                col_b.metric("👎 Non satisfaisant", nb_intent_non)
+                col_c.metric("➖ Sans avis", nb_intent_sans_avis)
+                col_d.metric("Taux satisfaction utilisateurs*", f"{taux_intent}%")
+                st.caption("*Taux satisfaction = Satisfaisant / (Satisfaisant + Non satisfaisant) — Sans avis = conversations évaluées sans intention déclarée")
+                from data_processing.yelda_conversation_cross_analysis import (
+                    aggregate_yelda_cross_metrics,
+                    build_yelda_conversation_cross_analysis,
+                    load_hubspot_contacts_excel,
+                )
+                hs_contacts_dir = PROJECT_ROOT / HUBSPOT_CONTACTS_PATH if not Path(HUBSPOT_CONTACTS_PATH).is_absolute() else Path(HUBSPOT_CONTACTS_PATH)
+                df_hs_contacts = load_hubspot_contacts_excel(hs_contacts_dir)
+                df_yelda_eval_pour_attribution = filter_yelda_evaluated(df_yelda_fse)
+                df_cross = build_yelda_conversation_cross_analysis(
+                    df_yelda_eval,
+                    df_tickets_processed,
+                    df_aircall_processed,
+                    df_contacts=df_hs_contacts if not df_hs_contacts.empty else None,
+                    window_hours=24,
+                    df_yelda_stellair_full=df_yelda_eval_pour_attribution,
+                )
+                st.markdown("**Croisement HubSpot × Aircall** — fenêtre **24 h** après la conversation (mêmes **conversations évaluées** que ci‑dessus)")
+                st.caption(
+                    "Tickets du contact et appels dont le numéro matche le contact (export `Hubspot/contacts`) ou Yelda. "
+                    "Attribution d’un ticket : dernière conversation **évaluée** du contact avant la création du ticket."
+                )
+                if df_cross.empty:
+                    st.caption("Aucune conversation évaluée sur la période pour ce croisement — ou dates manquantes.")
+                else:
+                    agg = aggregate_yelda_cross_metrics(df_cross)
+                    cx1, cx2, cx3, cx4, cx5 = st.columns(5)
+                    cx1.metric("Croisement — avec ID HubSpot", f"{agg['nb_avec_hubspot_id']} ({agg['part_avec_hubspot_id_pct']}%)")
+                    cx2.metric("Parcours sans ticket Yelda mais ≥1 ticket (24 h)", f"{agg['nb_parcours_false_avec_tickets_fenetre']} ({agg['part_parcours_false_avec_tickets_fenetre_pct']}%)")
+                    cx3.metric("Moy. tickets / conv. (fenêtre 24 h)", f"{agg['moyenne_nb_tickets_fenetre']}")
+                    cx4.metric("Moy. tickets attribués à la session", f"{agg['moyenne_nb_tickets_attribues_session']}")
+                    nb_conv_avec_appel = int((df_cross["nb_appels_aircall_fenetre"] > 0).sum()) if "nb_appels_aircall_fenetre" in df_cross.columns else 0
+                    cx5.metric("Conversations avec ≥1 appel (24 h)", nb_conv_avec_appel)
+                    csv_cross = df_cross.to_csv(index=False, encoding="utf-8-sig")
+                    st.sidebar.markdown("---")
+                    st.sidebar.caption("Yelda — analyse conversations")
+                    st.sidebar.download_button(
+                        "📥 Détail par conversation (CSV)",
+                        data=csv_cross,
+                        file_name=f"yelda_conversation_cross_{periode_str.replace(' ', '_').replace('/', '-')}.csv",
+                        mime="text/csv",
+                        key="sidebar_dl_yelda_cross_conv",
+                    )
+                st.markdown("### Évolution hebdomadaire des taux de satisfaction (LLM et utilisateurs)")
+                st.plotly_chart(graph_yelda_evolution_taux_satisfaction(df_yelda_eval), use_container_width=True)
+                st.plotly_chart(graph_yelda_evaluation(kpis_yelda['evaluation_counts']), use_container_width=True)
+                st.plotly_chart(graph_yelda_evaluation_intentions(nb_intent_sat, nb_intent_non, nb_intent_sans_avis), use_container_width=True)
+                st.plotly_chart(
+                    graph_yelda_interactions_tickets_semaine(
+                        df_yelda_eval,
+                        df_cross if not df_cross.empty else None,
+                    ),
+                    use_container_width=True,
+                )
+                st.plotly_chart(graph_yelda_evolution_scores(df_yelda_eval), use_container_width=True)
+                if kpis_yelda['score_llm_moyen'] > 0:
+                    st.plotly_chart(graph_yelda_score_llm(df_yelda_eval), use_container_width=True)
+            else:
+                st.info("📁 Fichier Yelda non trouvé. Placez `yelda.xlsx` dans `data/Affid/yelda/` pour afficher les indicateurs.")
+        except Exception as e:
+            st.warning(f"Indicateurs Yelda non disponibles : {e}")
 
     # --- RAPPORT POWERPOINT AGENTS ---
     from utils.powerpoint_helpers import create_powerpoint_agents_report
