@@ -45,7 +45,7 @@ def _logiciel(row):
 
 def charger(dossier, verbose=True):
     """Charge et normalise tous les fichiers Aircall .xls d'un dossier."""
-    fichiers = sorted(glob.glob(os.path.join(dossier, "*.xls")))
+    fichiers = sorted(glob.glob(os.path.join(dossier, "*.xls")) + glob.glob(os.path.join(dossier, "*.xlsx")))
     if not fichiers:
         sys.exit(f"Aucun fichier .xls trouvé dans {dossier!r}. Lancez depuis la racine ou utilisez --dossier.")
     frames = []
