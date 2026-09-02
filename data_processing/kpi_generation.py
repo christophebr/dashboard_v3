@@ -3815,7 +3815,9 @@ def calculate_ticket_response_time(df_tickets, agents=None):
         # Pour le graphique d'évolution, utiliser TOUS les tickets filtrés (même logique que evo_appels_ticket)
         # Exclure les tickets sans réponse (working_hours NaN ou <= 0) pour le calcul de la moyenne
         # mais les inclure dans le comptage pour avoir le nombre total de tickets
-        df_evolution_mean = df_filtered[df_filtered['working_hours'].notna() & (df_filtered['working_hours'] > 0)].groupby('Semaine')['working_hours'].agg(['mean']).reset_index()
+        # Moyennes hebdo calculées sur le MÊME jeu nettoyé que le KPI (±5σ, >0)
+        # -> cohérence entre le KPI "Temps de réponse moyen" et la courbe du graphe
+        df_evolution_mean = df_clean_for_mean.groupby('Semaine')['working_hours'].agg(['mean']).reset_index()
         df_evolution_count = df_filtered.groupby('Semaine')['working_hours'].agg(['count']).reset_index()
         df_evolution = pd.merge(df_evolution_mean, df_evolution_count, on='Semaine', how='outer').fillna(0)
         # Renommer les colonnes pour compatibilité avec le code suivant
@@ -3855,7 +3857,16 @@ def calculate_ticket_response_time(df_tickets, agents=None):
             annotation_text="Seuil 2h",
             row=1, col=1
         )
-        
+
+        # Ligne "moyenne période" = KPI affiché (réconciliation visuelle KPI/graphe)
+        fig.add_hline(
+            y=moyenne_temps_reponse,
+            line_dash="dot",
+            line_color="green",
+            annotation_text=f"Moyenne période {moyenne_temps_reponse:.1f}h",
+            row=1, col=1
+        )
+
         # Graphique du nombre de tickets (même comptage que evo_appels_ticket)
         fig.add_trace(
             go.Bar(

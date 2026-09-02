@@ -1085,67 +1085,90 @@ elif authentification_status:
                 
                 # (KPI Chatbot Yelda deplaces vers la page "Chatbot".)
 
-                # ----------- ANALYSE QUALITATIVE (échantillon 30% appels + tickets) -----------
-                st.markdown("## 📋 Analyse qualitative (échantillon 30%)")
+                # ----------- ANALYSE DES APPELS (résumés IA Aircall) -----------
+                st.markdown("## 🧠 Analyse des appels (résumés IA)")
                 try:
-                    from data_processing.analyse_appels_tickets_processing import load_analyse_appels_tickets
+                    import glob as _glob, json as _json
                     import plotly.express as px
-                    data_analyse = load_analyse_appels_tickets(ANALYSE_APPELS_TICKETS_PATH)
-                    if data_analyse:
-                        sg = data_analyse.get('synthese_globale') or {}
-                        sm = data_analyse.get('synthese_dernier_mois') or {}
-                        sps = data_analyse.get('synthese_par_secteur') or []
-                        st.caption("Données issues de l'analyse d'un échantillon (30%) des appels et tickets sur la période.")
-
-                        # Métriques globales
-                        st.markdown("### Synthèse globale (toute la période)")
-                        c1, c2, c3 = st.columns(3)
-                        c1.metric("Appels analysés", sg.get('appels_analyses', '-'))
-                        c2.metric("Tickets analysés", sg.get('tickets_analyses', '-'))
-                        c3.metric("Total analysé", sg.get('total', '-'))
-
-                        # Répartition par secteur (globale) - graphique
-                        rep_glob = [r for r in sg.get('repartition_secteurs', []) if r.get('nb') is not None]
-                        if rep_glob:
-                            df_rep = pd.DataFrame(rep_glob)
-                            fig_rep_glob = px.bar(df_rep, x='secteur', y='nb', color='pct',
-                                color_continuous_scale='Blues', text='nb',
-                                title="Répartition par secteur (période globale)")
-                            fig_rep_glob.update_layout(xaxis_tickangle=-45, showlegend=False)
-                            fig_rep_glob.update_traces(textposition='outside')
-                            st.plotly_chart(fig_rep_glob, use_container_width=True)
-
-                        # Synthèse dernier mois
-                        st.markdown("### Synthèse dernier mois (30 jours)")
-                        d1, d2, d3 = st.columns(3)
-                        d1.metric("Appels analysés", sm.get('appels_analyses', '-'))
-                        d2.metric("Tickets analysés", sm.get('tickets_analyses', '-'))
-                        d3.metric("Total analysé", sm.get('total', '-'))
-
-                        rep_mois = [r for r in sm.get('repartition_secteurs', []) if r.get('nb') is not None]
-                        if rep_mois:
-                            df_mois = pd.DataFrame(rep_mois)
-                            fig_rep_mois = px.bar(df_mois, x='secteur', y='nb', color='pct',
-                                color_continuous_scale='Teal', text='nb',
-                                title="Répartition par secteur (dernier mois)")
-                            fig_rep_mois.update_layout(xaxis_tickangle=-45, showlegend=False)
-                            fig_rep_mois.update_traces(textposition='outside')
-                            st.plotly_chart(fig_rep_mois, use_container_width=True)
-
-                        # Synthèses textuelles par catégorie (dernier mois)
-                        st.markdown("### Synthèses textuelles par catégorie (dernier mois)")
-                        for item in sps:
-                            secteur = item.get('secteur', '')
-                            nb = item.get('nb')
-                            pct = item.get('pct')
-                            syn = item.get('synthese_textuelle', '')
-                            if secteur and syn:
-                                with st.expander(f"**{secteur}**" + (f" — {nb} ({pct}%)" if nb is not None and pct is not None else "")):
-                                    st.markdown(syn)
+                    fichiers_an = sorted(_glob.glob("data/Affid/analyse_appels_tickets/analyse_resumes_appels_*.json"))
+                    if not fichiers_an:
+                        st.info("📁 Analyse non disponible. Lancez `scripts/recup_resumes_appels.py` puis "
+                                "`scripts/analyse_resumes_appels.py` pour générer l'agrégat.")
                     else:
-                        st.info("📁 Fichier d'analyse non trouvé. Placez `dashboard_support_stellair.xlsx` dans `data/Affid/analyse_appels_tickets/` pour afficher l'analyse qualitative.")
+                        an = _json.load(open(fichiers_an[-1], encoding="utf-8"))
+                        meta = an.get("meta", {})
+                        themes = an.get("themes", [])
+                        st.caption(
+                            f"Mois analysé : **{an.get('mois','?')}** · résumés IA Aircall · thèmes déduits par IA "
+                            f"(socle : catégories tickets). Volumes d'appels = sur les appels avec résumé IA "
+                            f"(couverture {meta.get('taux_couverture_ia_pct','?')}%)."
+                        )
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("Appels analysés (IA)", meta.get("nb_appels_avec_ia", "-"))
+                        c2.metric("Couverture IA", f"{meta.get('taux_couverture_ia_pct','-')}%")
+                        c3.metric("Tickets support (mois)", meta.get("nb_tickets_support", "-"))
+
+                        if themes:
+                            df_th = pd.DataFrame(themes)
+
+                            # Volumes par thème : appels vs tickets
+                            df_vol = df_th.melt(id_vars="theme", value_vars=["nb_appels", "nb_tickets"],
+                                                var_name="canal", value_name="volume")
+                            df_vol["canal"] = df_vol["canal"].map({"nb_appels": "Appels", "nb_tickets": "Tickets"})
+                            fig_vol = px.bar(df_vol, x="theme", y="volume", color="canal", barmode="group",
+                                             title="Volumes par thème — appels vs tickets")
+                            fig_vol.update_layout(xaxis_tickangle=-30)
+                            st.plotly_chart(fig_vol, use_container_width=True)
+
+                            # Préférence de canal par thème (100%)
+                            fig_canal = px.bar(df_th, x="theme", y=["part_telephone_pct", "part_ecrit_pct"],
+                                               title="Préférence de canal par thème (%)",
+                                               labels={"value": "%", "variable": "Canal", "theme": "Thème"})
+                            newnames = {"part_telephone_pct": "Téléphone", "part_ecrit_pct": "Écrit (tickets)"}
+                            fig_canal.for_each_trace(lambda tr: tr.update(name=newnames.get(tr.name, tr.name)))
+                            fig_canal.update_layout(xaxis_tickangle=-30)
+                            st.plotly_chart(fig_canal, use_container_width=True)
+
+                            # Sentiment (appels) par thème
+                            sent_rows = [{"theme": t["theme"], "sentiment": k, "n": v}
+                                         for t in themes for k, v in (t.get("sentiment") or {}).items()]
+                            if sent_rows:
+                                fig_sent = px.bar(pd.DataFrame(sent_rows), x="theme", y="n", color="sentiment",
+                                                  title="Sentiment (appels) par thème",
+                                                  color_discrete_map={"POSITIVE": "#a7dba7", "NEUTRAL": "#c9c9c9",
+                                                                      "NEGATIVE": "#f28e8e", "INCONNU": "#eeeeee"})
+                                fig_sent.update_layout(xaxis_tickangle=-30)
+                                st.plotly_chart(fig_sent, use_container_width=True)
+
+                            # Drill-down : sous-catégories d'un thème
+                            st.markdown("### 🔎 Détail par sous-catégorie")
+                            themes_dispo = [t["theme"] for t in themes]
+                            th_sel = st.selectbox("Thème à détailler", themes_dispo, key="theme_souscat")
+                            t_obj = next((t for t in themes if t["theme"] == th_sel), None)
+                            if t_obj and t_obj.get("sous_categories"):
+                                df_sc = pd.DataFrame(t_obj["sous_categories"]).rename(columns={
+                                    "sous_cat": "Sous-catégorie", "nb_appels": "Appels", "nb_tickets": "Tickets",
+                                    "part_telephone_pct": "% Téléphone", "part_ecrit_pct": "% Écrit"})
+                                st.dataframe(df_sc[["Sous-catégorie", "Appels", "Tickets", "% Téléphone", "% Écrit"]],
+                                             use_container_width=True, hide_index=True)
+                                fig_sc = px.bar(t_obj["sous_categories"], x="sous_cat",
+                                                y=["part_telephone_pct", "part_ecrit_pct"],
+                                                title=f"Préférence de canal — sous-catégories de « {th_sel} »",
+                                                labels={"value": "%", "variable": "Canal", "sous_cat": "Sous-catégorie"})
+                                fig_sc.for_each_trace(lambda tr: tr.update(name=newnames.get(tr.name, tr.name)))
+                                fig_sc.update_layout(xaxis_tickangle=-30)
+                                st.plotly_chart(fig_sc, use_container_width=True)
+
+                            # Exemples anonymisés par thème
+                            with st.expander("💬 Exemples d'appels par thème (anonymisés)"):
+                                for t in themes:
+                                    ex = t.get("exemples_anonymises") or []
+                                    if ex:
+                                        st.markdown(f"**{t['theme']}**")
+                                        for e in ex:
+                                            st.markdown(f"- {e}")
                 except Exception as e:
-                    st.warning(f"Analyse qualitative non disponible : {e}")
+                    st.warning(f"Analyse des appels non disponible : {e}")
 
                 # ----------- CONCENTRATION DES DEMANDES (Pareto) -----------
                 st.markdown("## 📊 Concentration des demandes")

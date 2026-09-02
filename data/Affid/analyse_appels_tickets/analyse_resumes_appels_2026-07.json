@@ -1,0 +1,493 @@
+{
+  "mois": "2026-07",
+  "meta": {
+    "nb_appels_entrants": 1792,
+    "nb_appels_avec_ia": 1387,
+    "taux_couverture_ia_pct": 77.4,
+    "nb_tickets_support": 607,
+    "note": "Volumes d'appels = sur les appels avec résumé IA (couverture partielle)."
+  },
+  "themes": [
+    {
+      "theme": "Lecteur",
+      "nb_appels": 408,
+      "nb_tickets": 239,
+      "part_telephone_pct": 63.1,
+      "part_ecrit_pct": 36.9,
+      "sentiment": {
+        "NEUTRAL": 231,
+        "POSITIVE": 173,
+        "NEGATIVE": 4
+      },
+      "sous_categories": [
+        {
+          "sous_cat": "Lecteur",
+          "nb_appels": 149,
+          "nb_tickets": 36,
+          "part_telephone_pct": 80.5,
+          "part_ecrit_pct": 19.5
+        },
+        {
+          "sous_cat": "Lecture CPS",
+          "nb_appels": 48,
+          "nb_tickets": 23,
+          "part_telephone_pct": 67.6,
+          "part_ecrit_pct": 32.4
+        },
+        {
+          "sous_cat": "Echange",
+          "nb_appels": 18,
+          "nb_tickets": 42,
+          "part_telephone_pct": 30.0,
+          "part_ecrit_pct": 70.0
+        },
+        {
+          "sous_cat": "PbConnexion",
+          "nb_appels": 28,
+          "nb_tickets": 29,
+          "part_telephone_pct": 49.1,
+          "part_ecrit_pct": 50.9
+        },
+        {
+          "sous_cat": "PC/SC",
+          "nb_appels": 11,
+          "nb_tickets": 33,
+          "part_telephone_pct": 25.0,
+          "part_ecrit_pct": 75.0
+        },
+        {
+          "sous_cat": "Authentification / sécurisation CPS",
+          "nb_appels": 21,
+          "nb_tickets": 16,
+          "part_telephone_pct": 56.8,
+          "part_ecrit_pct": 43.2
+        },
+        {
+          "sous_cat": "MAJ",
+          "nb_appels": 28,
+          "nb_tickets": 4,
+          "part_telephone_pct": 87.5,
+          "part_ecrit_pct": 12.5
+        },
+        {
+          "sous_cat": "Appairage",
+          "nb_appels": 16,
+          "nb_tickets": 9,
+          "part_telephone_pct": 64.0,
+          "part_ecrit_pct": 36.0
+        },
+        {
+          "sous_cat": "Autres",
+          "nb_appels": 89,
+          "nb_tickets": 47,
+          "part_telephone_pct": 65.4,
+          "part_ecrit_pct": 34.6
+        }
+      ],
+      "exemples_anonymises": [
+        "Appel du cabinet médical de [NOM] concernant un lecteur (probablement de carte Vitale) déconnecté. L'agent confirme le problème, indique qu'un collègue vérifie une anomalie et promet de rappeler sous cinq minutes. Le client rappelle qu'un technicien devait recontacter le cabinet. Échanges brefs d'attente et confirmation de rappel imminent.",
+        "Un cabinet médical appelle pour signaler qu'un lecteur de carte Vitale (au nom du médecin [NOM]) ne fonctionne toujours pas après une remontée faite la veille. L'agent confirme un problème de certificat expiré sur le lecteur, indique que la résolution est prise en charge à distance par l'équipe technique et promet de demander un rappel pour tenir le cabinet informé dans la journée."
+      ]
+    },
+    {
+      "theme": "Utilisation",
+      "nb_appels": 204,
+      "nb_tickets": 131,
+      "part_telephone_pct": 60.9,
+      "part_ecrit_pct": 39.1,
+      "sentiment": {
+        "NEUTRAL": 106,
+        "POSITIVE": 94,
+        "NEGATIVE": 4
+      },
+      "sous_categories": [
+        {
+          "sous_cat": "Information",
+          "nb_appels": 34,
+          "nb_tickets": 60,
+          "part_telephone_pct": 36.2,
+          "part_ecrit_pct": 63.8
+        },
+        {
+          "sous_cat": "Amélioration",
+          "nb_appels": 48,
+          "nb_tickets": 4,
+          "part_telephone_pct": 92.3,
+          "part_ecrit_pct": 7.7
+        },
+        {
+          "sous_cat": "Fonctionnalités",
+          "nb_appels": 48,
+          "nb_tickets": 1,
+          "part_telephone_pct": 98.0,
+          "part_ecrit_pct": 2.0
+        },
+        {
+          "sous_cat": "Non précisé",
+          "nb_appels": 0,
+          "nb_tickets": 41,
+          "part_telephone_pct": 0.0,
+          "part_ecrit_pct": 100.0
+        },
+        {
+          "sous_cat": "ApCv",
+          "nb_appels": 27,
+          "nb_tickets": 6,
+          "part_telephone_pct": 81.8,
+          "part_ecrit_pct": 18.2
+        },
+        {
+          "sous_cat": "Ordoclic",
+          "nb_appels": 19,
+          "nb_tickets": 7,
+          "part_telephone_pct": 73.1,
+          "part_ecrit_pct": 26.9
+        },
+        {
+          "sous_cat": "Télétransmission",
+          "nb_appels": 17,
+          "nb_tickets": 2,
+          "part_telephone_pct": 89.5,
+          "part_ecrit_pct": 10.5
+        },
+        {
+          "sous_cat": "SCOR",
+          "nb_appels": 5,
+          "nb_tickets": 9,
+          "part_telephone_pct": 35.7,
+          "part_ecrit_pct": 64.3
+        },
+        {
+          "sous_cat": "Autres",
+          "nb_appels": 6,
+          "nb_tickets": 1,
+          "part_telephone_pct": 85.7,
+          "part_ecrit_pct": 14.3
+        }
+      ],
+      "exemples_anonymises": [
+        "Appel d'une assistante de l'équipe médico-politique à Nice souhaitant intégrer un nouveau médecin dans leur structure et le créer dans Stellair. L'agent guide l'interlocutrice : accéder à Paramètres (bas gauche) puis Collaborateur et choisir le type (remplaçant ou collaborateur, ou secrétariat) pour enregistrer le nouveau docteur. Problème résolu et appel clôturé.",
+        "Le cabinet médical de Vallon-Pont-d'Arc signale qu'un rendez-vous téléphonique prévu à 16h45 pour aider le Dr [NOM] n'a pas eu lieu. Le problème à résoudre concerne l'accès à Amélie Pro et l'installation du lecteur en mode PCST. L'agent indique qu'il va vérifier avec la personne concernée et confirme qu'un appel sera organisé. L'appel se termine avec la promesse de recontacter le cabinet."
+      ]
+    },
+    {
+      "theme": "Facturation",
+      "nb_appels": 212,
+      "nb_tickets": 86,
+      "part_telephone_pct": 71.1,
+      "part_ecrit_pct": 28.9,
+      "sentiment": {
+        "NEUTRAL": 119,
+        "POSITIVE": 92,
+        "NEGATIVE": 1
+      },
+      "sous_categories": [
+        {
+          "sous_cat": "Facturation",
+          "nb_appels": 146,
+          "nb_tickets": 70,
+          "part_telephone_pct": 67.6,
+          "part_ecrit_pct": 32.4
+        },
+        {
+          "sous_cat": "Rejets",
+          "nb_appels": 47,
+          "nb_tickets": 9,
+          "part_telephone_pct": 83.9,
+          "part_ecrit_pct": 16.1
+        },
+        {
+          "sous_cat": "Autres",
+          "nb_appels": 9,
+          "nb_tickets": 0,
+          "part_telephone_pct": 100.0,
+          "part_ecrit_pct": 0.0
+        },
+        {
+          "sous_cat": "Facturation C2S",
+          "nb_appels": 6,
+          "nb_tickets": 1,
+          "part_telephone_pct": 85.7,
+          "part_ecrit_pct": 14.3
+        },
+        {
+          "sous_cat": "Facturation TP AMC",
+          "nb_appels": 2,
+          "nb_tickets": 2,
+          "part_telephone_pct": 50.0,
+          "part_ecrit_pct": 50.0
+        },
+        {
+          "sous_cat": "TPAMC",
+          "nb_appels": 1,
+          "nb_tickets": 3,
+          "part_telephone_pct": 25.0,
+          "part_ecrit_pct": 75.0
+        },
+        {
+          "sous_cat": "Facturation Hôpital",
+          "nb_appels": 1,
+          "nb_tickets": 1,
+          "part_telephone_pct": 50.0,
+          "part_ecrit_pct": 50.0
+        }
+      ],
+      "exemples_anonymises": [
+        "Appel d'un futur praticien libéral (gastro-entérologue) signalant un problème pour effectuer un paiement en ligne via un lien fourni. L'agent confirme le blocage côté paiement, recueille le nom [NOM] et le numéro de téléphone [TEL] et transfère les coordonnées au service concerné pour qu'un collègue rappelle le patient et finalise la procédure de paiement.",
+        "Un client pharmacien contacte le support technique Steller pour signaler un prélèvement bancaire non identifié. L'agent précise qu'il s'agit du numéro de support technique et oriente le client vers le service dédié aux questions de prélèvements en lui fournissant le numéro composé [TEL] et l'option à sélectionner (choix numéro 3) pour joindre le bon service."
+      ]
+    },
+    {
+      "theme": "Connexion à Stellair",
+      "nb_appels": 179,
+      "nb_tickets": 17,
+      "part_telephone_pct": 91.3,
+      "part_ecrit_pct": 8.7,
+      "sentiment": {
+        "NEUTRAL": 93,
+        "POSITIVE": 84,
+        "NEGATIVE": 2
+      },
+      "sous_categories": [
+        {
+          "sous_cat": "Stellair Connexion",
+          "nb_appels": 92,
+          "nb_tickets": 13,
+          "part_telephone_pct": 87.6,
+          "part_ecrit_pct": 12.4
+        },
+        {
+          "sous_cat": "Stellair Erreur",
+          "nb_appels": 49,
+          "nb_tickets": 2,
+          "part_telephone_pct": 96.1,
+          "part_ecrit_pct": 3.9
+        },
+        {
+          "sous_cat": "Stellair",
+          "nb_appels": 37,
+          "nb_tickets": 2,
+          "part_telephone_pct": 94.9,
+          "part_ecrit_pct": 5.1
+        },
+        {
+          "sous_cat": "Autres",
+          "nb_appels": 1,
+          "nb_tickets": 0,
+          "part_telephone_pct": 100.0,
+          "part_ecrit_pct": 0.0
+        }
+      ],
+      "exemples_anonymises": [
+        "Appel d'un client ([NOM], [NOM] [ID]) signalant qu'il ne peut pas ajouter de collaborateurs car la liste d'utilisateurs est complète. L'agent vérifie l'identité (nom, prénom, adresse mail [EMAIL]), augmente la limite d'utilisateurs autorisés et confirme la modification. Problème résolu, appel clôturé cordialement.",
+        "Rappel téléphonique d'un médecin ([NOM]) après une coupure. L'appel concerne la reprise d'une intervention à distance par un technicien ou collègue d'[NOM] pour prendre la main sur son poste/appareillage, l'interlocuteur vérifie l'historique et les détails du précédent contact pour relancer la prise de main et poursuivre l'assistance technique."
+      ]
+    },
+    {
+      "theme": "Installation",
+      "nb_appels": 160,
+      "nb_tickets": 18,
+      "part_telephone_pct": 89.9,
+      "part_ecrit_pct": 10.1,
+      "sentiment": {
+        "POSITIVE": 94,
+        "NEUTRAL": 66
+      },
+      "sous_categories": [
+        {
+          "sous_cat": "MAN",
+          "nb_appels": 54,
+          "nb_tickets": 12,
+          "part_telephone_pct": 81.8,
+          "part_ecrit_pct": 18.2
+        },
+        {
+          "sous_cat": "XM_MAJ_180",
+          "nb_appels": 60,
+          "nb_tickets": 1,
+          "part_telephone_pct": 98.4,
+          "part_ecrit_pct": 1.6
+        },
+        {
+          "sous_cat": "Autres",
+          "nb_appels": 30,
+          "nb_tickets": 0,
+          "part_telephone_pct": 100.0,
+          "part_ecrit_pct": 0.0
+        },
+        {
+          "sous_cat": "Livraison",
+          "nb_appels": 15,
+          "nb_tickets": 5,
+          "part_telephone_pct": 75.0,
+          "part_ecrit_pct": 25.0
+        },
+        {
+          "sous_cat": "Autre",
+          "nb_appels": 1,
+          "nb_tickets": 0,
+          "part_telephone_pct": 100.0,
+          "part_ecrit_pct": 0.0
+        }
+      ],
+      "exemples_anonymises": [
+        "Un médecin contacté le support technique de Stellair pour demander l'installation immédiate de la solution (migration suite à interruption d'activité et carte FID périmée). Il explique avoir raté un rendez‑vous commercial précédent. L'agent a enregistré les coordonnées (nom, prénom, mobile se terminant par [TEL] et adresse e‑mail [EMAIL]) et indiqué qu'il transmettrait la demande au service commercial afin qu'on le recontacte rapidement.",
+        "Le docteur appelle pour un dépannage urgent lié à une corruption (probablement d'un logiciel ou données de facturation). Il indique avoir déjà contacté le support jeudi et vendredi sans rappel reçu de la personne compétente. L'agent confirme l'existence d'une demande, va transmettre un message pour vérifier la disponibilité du technicien en charge et reprogrammer un rappel ou un rendez‑vous, puis conclut l'appel en promettant un suivi."
+      ]
+    },
+    {
+      "theme": "ADV / Logistique",
+      "nb_appels": 85,
+      "nb_tickets": 26,
+      "part_telephone_pct": 76.6,
+      "part_ecrit_pct": 23.4,
+      "sentiment": {
+        "NEUTRAL": 52,
+        "POSITIVE": 31,
+        "NEGATIVE": 2
+      },
+      "sous_categories": [
+        {
+          "sous_cat": "ADV (contrats",
+          "nb_appels": 18,
+          "nb_tickets": 20,
+          "part_telephone_pct": 47.4,
+          "part_ecrit_pct": 52.6
+        },
+        {
+          "sous_cat": "Activation / Désactivation",
+          "nb_appels": 32,
+          "nb_tickets": 4,
+          "part_telephone_pct": 88.9,
+          "part_ecrit_pct": 11.1
+        },
+        {
+          "sous_cat": "Autres",
+          "nb_appels": 35,
+          "nb_tickets": 0,
+          "part_telephone_pct": 100.0,
+          "part_ecrit_pct": 0.0
+        },
+        {
+          "sous_cat": "Non précisé",
+          "nb_appels": 0,
+          "nb_tickets": 2,
+          "part_telephone_pct": 0.0,
+          "part_ecrit_pct": 100.0
+        }
+      ],
+      "exemples_anonymises": [
+        "Appel court confirmant l'envoi d'un document prévu lundi avec livraison mardi ou mercredi matin. Le destinataire doit être [NOM] à la Clinique Sainte‑Geneviève, 29 rue Sarette, 14e arrondissement, 75014 Paris. L'agent a repris et validé l'adresse et la consigne de destinataire.",
+        "Appel d'un tiers demandant l'envoi de deux factures annuelles pour un client ([NOM], Guadeloupe) pour les années 2025 et 2026. L'agent a confirmé les informations (nom et adresse email fournie) et a indiqué qu'il transmettrait la demande à un collègue qui renverra les factures par email. Fin de l'échange."
+      ]
+    },
+    {
+      "theme": "Autre",
+      "nb_appels": 35,
+      "nb_tickets": 70,
+      "part_telephone_pct": 33.3,
+      "part_ecrit_pct": 66.7,
+      "sentiment": {
+        "NEUTRAL": 26,
+        "POSITIVE": 9
+      },
+      "sous_categories": [
+        {
+          "sous_cat": "Non précisé",
+          "nb_appels": 0,
+          "nb_tickets": 70,
+          "part_telephone_pct": 0.0,
+          "part_ecrit_pct": 100.0
+        },
+        {
+          "sous_cat": "Divers",
+          "nb_appels": 34,
+          "nb_tickets": 0,
+          "part_telephone_pct": 100.0,
+          "part_ecrit_pct": 0.0
+        },
+        {
+          "sous_cat": "Autres",
+          "nb_appels": 1,
+          "nb_tickets": 0,
+          "part_telephone_pct": 100.0,
+          "part_ecrit_pct": 0.0
+        }
+      ],
+      "exemples_anonymises": [
+        "Appel court où le client rappelle un message de [NOM] concernant un ticket. L'agent propose de laisser un message pour rappel ; le client indique être disponible et donne son numéro de téléphone [TEL] et précise sa disponibilité. L'agent confirme la prise en note du numéro et termine l'appel.",
+        "Appel téléphonique très bref et confus. L'agent se présente comme représentant d'une société (nom partiel donné) et demande s'il est bien au cabinet médical ; l'interlocuteur demande l'identité de l'appelant. Aucune information commerciale, technique ou décisionnelle n'a été échangée; l'échange se termine sans suite ni précision."
+      ]
+    },
+    {
+      "theme": "Recettes",
+      "nb_appels": 80,
+      "nb_tickets": 1,
+      "part_telephone_pct": 98.8,
+      "part_ecrit_pct": 1.2,
+      "sentiment": {
+        "POSITIVE": 47,
+        "NEUTRAL": 32,
+        "NEGATIVE": 1
+      },
+      "sous_categories": [
+        {
+          "sous_cat": "Recettes",
+          "nb_appels": 48,
+          "nb_tickets": 1,
+          "part_telephone_pct": 98.0,
+          "part_ecrit_pct": 2.0
+        },
+        {
+          "sous_cat": "Autres",
+          "nb_appels": 32,
+          "nb_tickets": 0,
+          "part_telephone_pct": 100.0,
+          "part_ecrit_pct": 0.0
+        }
+      ],
+      "exemples_anonymises": [
+        "Le médecin [NOM] signale depuis ce matin l'impossibilité d'éditer des ordonnances sécurisées avec QR code via Stellair (fonctionnait hier). Il a déjà ouvert un ticket (n°[ID]) et envoyé une capture du message d'erreur par le chat. L'agent retrouve le ticket, indique que c'est un collègue qui le traite et promet qu'on rappellera le médecin rapidement pour le tenir informé.",
+        "Appel d'un podologue client utilisant AFID/Vital (version 2024) rencontrant un blocage de télétransmission dû à des ARL non traités. L'agent guide le client pas à pas : menu Outils > SESAM‑Vitale > fonction « traduire ARL ». Après traduction et validation, la télétransmission pourra être relancée normalement. Le client confirme que les envois et la connexion semblent fonctionner et remercie l'agent."
+      ]
+    },
+    {
+      "theme": "Formation",
+      "nb_appels": 24,
+      "nb_tickets": 19,
+      "part_telephone_pct": 55.8,
+      "part_ecrit_pct": 44.2,
+      "sentiment": {
+        "POSITIVE": 15,
+        "NEUTRAL": 9
+      },
+      "sous_categories": [
+        {
+          "sous_cat": "Formation",
+          "nb_appels": 18,
+          "nb_tickets": 3,
+          "part_telephone_pct": 85.7,
+          "part_ecrit_pct": 14.3
+        },
+        {
+          "sous_cat": "Remplacant / Collaborateur",
+          "nb_appels": 1,
+          "nb_tickets": 16,
+          "part_telephone_pct": 5.9,
+          "part_ecrit_pct": 94.1
+        },
+        {
+          "sous_cat": "Autres",
+          "nb_appels": 5,
+          "nb_tickets": 0,
+          "part_telephone_pct": 100.0,
+          "part_ecrit_pct": 0.0
+        }
+      ],
+      "exemples_anonymises": [
+        "Appel d'un médecin signalant qu'un lecteur SESAM‑Vitale n'est pas branché après une formation Stellair. L'agent indique que l'appel n'est pas au service technique et donne le numéro correct ([TEL]) avec la navigation à suivre (appuyer trois fois sur la touche 1) pour joindre le support technique Stellair. Le médecin confirme et remercie.",
+        "Le patient/docteur appelle pour une formation prévue sur le boîtier Stellair avec un formateur [NOM]. Le correspondant de l'équipe Olaqin informe qu'il va prévenir le formateur et lui demande de rappeler le patient. Le formateur confirme qu'il appellera ; l'appel se termine sur la prise d'attente du patient en attendant le rappel."
+      ]
+    }
+  ]
+}

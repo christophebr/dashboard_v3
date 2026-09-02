@@ -69,7 +69,14 @@ logs/
 config.py
 hashed_pw.pkl
 .env
+config.env
+*.env
 *.key
+
+# Échantillons d'analyse (contiennent des numéros / données personnelles)
+echantillons/
+transcriptions/
+resumes_appels/
 
 # Fichiers système
 .DS_Store
